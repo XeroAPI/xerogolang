@@ -2,12 +2,14 @@ package model
 
 //Invoice is an Accounts Payable or Accounts Recievable document in a Xero organisation
 type Invoice struct {
-
 	// See Invoice Types
 	Type string `json:"Type" xml:"Type"`
 
+	// See Contacts
+	Contact Contact `json:"Contact" xml:"Contact"`
+
 	// See LineItems
-	LineItems []LineItem `json:"LineItems" xml:"LineItems"`
+	LineItems []LineItem `json:"LineItems>LineItem" xml:"LineItems>LineItem"`
 
 	// Date invoice was issued – YYYY-MM-DD. If the Date element is not specified it will default to the current date based on the timezone setting of the organisation
 	Date string `json:"Date,omitempty" xml:"Date,omitempty"`
@@ -28,7 +30,7 @@ type Invoice struct {
 	BrandingThemeID string `json:"BrandingThemeID,omitempty" xml:"BrandingThemeID,omitempty"`
 
 	// URL link to a source document – shown as “Go to [appName]” in the Xero app
-	Url string `json:"Url,omitempty" xml:"Url,omitempty"`
+	URL string `json:"Url,omitempty" xml:"Url,omitempty"`
 
 	// The currency that invoice has been raised in (see Currencies)
 	CurrencyCode string `json:"CurrencyCode,omitempty" xml:"CurrencyCode,omitempty"`
@@ -92,4 +94,9 @@ type Invoice struct {
 
 	// Details of credit notes that have been applied to an invoice
 	CreditNotes []CreditNote `json:"CreditNotes,omitempty" xml:"CreditNotes,omitempty"`
+}
+
+//Invoices contains a collection of Invoices
+type Invoices struct {
+	Invoices []Invoice `json:"Invoices" xml:"Invoice"`
 }

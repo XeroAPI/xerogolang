@@ -3,6 +3,8 @@ package xero
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -30,7 +32,17 @@ func (s Session) GetAuthURL() (string, error) {
 func (s *Session) Authorize(provider goth.Provider, params goth.Params) (string, error) {
 	p := provider.(*Provider)
 	if p.Method == "private" {
+		privateAccessToken := &oauth.AccessToken{
+			Token:  os.Getenv("XERO_KEY"),
+			Secret: os.Getenv("XERO_SECRET"),
+		}
+		s.AccessTokenExpires = time.Now().UTC().Add(87600 * time.Hour)
+		s.AccessToken = privateAccessToken
+
 		return p.ClientKey, nil
+	}
+	if s.RequestToken == nil {
+		return "", fmt.Errorf("Missing Request Token")
 	}
 	accessToken, err := p.consumer.AuthorizeToken(s.RequestToken, params.Get("oauth_verifier"))
 	if err != nil {
@@ -40,7 +52,7 @@ func (s *Session) Authorize(provider goth.Provider, params goth.Params) (string,
 	s.AccessTokenExpires = time.Now().UTC().Add(30 * time.Minute)
 	s.AccessToken = accessToken
 
-	return accessToken.Token, err
+	return accessToken.Token, nil
 }
 
 // Marshal the session into a string

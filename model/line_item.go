@@ -2,12 +2,11 @@ package model
 
 //LineItem is a line containing detail on an Invoice
 type LineItem struct {
-
 	// Description needs to be at least 1 char long. A line item with just a description (i.e no unit amount or quantity) can be created by specifying just a <Description> element that contains at least 1 character
 	Description string `json:"Description,omitempty" xml:"Description,omitempty"`
 
 	// LineItem Quantity
-	Quantity string `json:"Quantity,omitempty" xml:"Quantity,omitempty"`
+	Quantity float32 `json:"Quantity,omitempty" xml:"Quantity,omitempty"`
 
 	// LineItem Unit Amount
 	UnitAmount float32 `json:"UnitAmount,omitempty" xml:"UnitAmount,omitempty"`
