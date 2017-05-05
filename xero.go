@@ -339,12 +339,12 @@ func (p *Provider) RefreshTokenAvailable() bool {
 }
 
 //GetSessionFromStore returns a session for a given store, provider, and request
-func GetSessionFromStore(request *http.Request, provider *Provider, store sessions.Store) (goth.Session, error) {
+func (p *Provider) GetSessionFromStore(request *http.Request, store sessions.Store) (goth.Session, error) {
 	sessionMarshalled, _ := store.Get(request, "xero"+gothic.SessionName)
 	value := sessionMarshalled.Values["xero"]
 	if value == nil {
 		return nil, errors.New("could not find a matching session for this request")
 	}
 
-	return provider.UnmarshalSession(value.(string))
+	return p.UnmarshalSession(value.(string))
 }

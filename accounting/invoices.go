@@ -19,7 +19,7 @@ var CreateInvoice = func(res http.ResponseWriter, req *http.Request, provider *x
 		return nil, err
 	}
 
-	session, err := xero.GetSessionFromStore(req, provider, store)
+	session, err := provider.GetSessionFromStore(req, store)
 	if err != nil {
 		return nil, err
 	}
