@@ -40,10 +40,10 @@ type Organisation struct {
 	TaxNumber string `json:"TaxNumber,omitempty"`
 
 	// Calendar day e.g. 0-31
-	FinancialYearEndDay string `json:"FinancialYearEndDay,omitempty"`
+	FinancialYearEndDay int `json:"FinancialYearEndDay,omitempty"`
 
 	// Calendar Month e.g. 1-12
-	FinancialYearEndMonth string `json:"FinancialYearEndMonth,omitempty"`
+	FinancialYearEndMonth int `json:"FinancialYearEndMonth,omitempty"`
 
 	// The accounting basis used for tax returns. See Sales Tax Basis
 	SalesTaxBasis string `json:"SalesTaxBasis,omitempty"`
@@ -88,7 +88,7 @@ type Organisation struct {
 	ExternalLinks []ExternalLink `json:"ExternalLinks,omitempty"`
 }
 
-//OrganisationResponse contains a collection of Organisations - but there will only ever be one like Highlander
-type OrganisationResponse struct {
+//OrganisationCollection contains a collection of Organisations - but there will only ever be one like Highlander
+type OrganisationCollection struct {
 	Organisations []Organisation `json:"Organisations,omitempty"`
 }
