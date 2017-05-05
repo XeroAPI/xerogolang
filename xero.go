@@ -27,10 +27,14 @@ var (
 	authorizeURL    = "https://api.xero.com/oauth/Authorize"
 	tokenURL        = "https://api.xero.com/oauth/AccessToken"
 	endpointProfile = "https://api.xero.com/api.xro/2.0/"
-	//userAgentString should be changed to match the name of your Application
-	userAgentString    = os.Getenv("XERO_USER_AGENT") + " (goth-xero 1.0)"
+	//userAgentString should match the name of your Application
+	userAgentString = os.Getenv("XERO_USER_AGENT") + " (xero-golang 0.1)"
+	//privateKeyFilePath is a file path to your .pem private/public key file
+	//You only need this for private and partner Applications
+	//more details here: https://developer.xero.com/documentation/api-guides/create-publicprivate-key
 	privateKeyFilePath = os.Getenv("XERO_PRIVATE_KEY_PATH")
-	acceptType         = os.Getenv("XERO_ACCEPT_TYPE")
+	//acceptType should be set to “application/json” - this SDK does not parse XML responses currently
+	acceptType = os.Getenv("XERO_ACCEPT_TYPE")
 )
 
 // New creates a new Xero provider, and sets up important connection details.
@@ -125,8 +129,14 @@ func (p *Provider) BeginAuth(state string) (goth.Session, error) {
 func (p *Provider) ProcessRequest(request *http.Request, session *Session) ([]byte, error) {
 	request.Header.Add("Accept", acceptType)
 	request.Header.Add("User-Agent", userAgentString)
-	//TODO: encode api calls
-	//request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//We have to PUT and POST using XML so we specify the content type here.
+	//Ideally this should be x-www-form-urlencoded but mrjones/oAuth library
+	//will strip our request body when it uses RSA-SHA1 signing if we specify
+	// that content type so we can't use it with Partner or private applications.
+	//application/xml still works and still appears in Xero's logs
+	if request.Method == "PUT" || request.Method == "POST" {
+		request.Header.Add("Content-Type", "application/xml")
+	}
 
 	client, err := p.consumer.MakeHttpClient(session.AccessToken)
 	if err != nil {
