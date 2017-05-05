@@ -10,7 +10,7 @@ import (
 	"math"
 
 	"github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/Accounting"
+	"github.com/TheRegan/Xero-Golang/accounting"
 	"github.com/gorilla/pat"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
