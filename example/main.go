@@ -18,7 +18,8 @@ import (
 )
 
 var (
-	store = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
+	store    = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
+	invoices = accounting.CreateExampleInvoice()
 )
 
 func init() {
@@ -63,8 +64,25 @@ func main() {
 	})
 
 	p.Get("/createinvoice", func(res http.ResponseWriter, req *http.Request) {
-		invoices := accounting.CreateExampleInvoice()
 		invoiceCollection, err := accounting.CreateInvoice(res, req, provider, store, invoices)
+
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoices.Invoices[0].InvoiceID = invoiceCollection.Invoices[0].InvoiceID
+		invoices.Invoices[0].Status = invoiceCollection.Invoices[0].Status
+		t, _ := template.New("foo").Parse(invoiceTemplate)
+		t.Execute(res, invoiceCollection.Invoices[0])
+	})
+
+	p.Get("/updateinvoice", func(res http.ResponseWriter, req *http.Request) {
+		if invoices.Invoices[0].Status == "DRAFT" {
+			invoices.Invoices[0].Status = "SUBMITTED"
+		} else if invoices.Invoices[0].Status == "SUBMITTED" {
+			invoices.Invoices[0].Status = "DRAFT"
+		}
+		invoiceCollection, err := accounting.UpdateInvoice(res, req, provider, store, invoices)
 
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -105,4 +123,5 @@ var invoiceTemplate = `
 <p>Total: {{.Total}}</p>
 <p>AmountDue: {{.AmountDue}}</p>
 <p>AmountPaid: {{.AmountPaid}}</p>
+<p><a href="/updateinvoice?provider=xero">update status of this invoice</a></p>
 `
