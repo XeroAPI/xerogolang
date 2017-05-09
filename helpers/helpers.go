@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
 //ReaderToString converts an io.ReadCloser to a string
@@ -22,4 +26,56 @@ func ReaderToString(reader io.ReadCloser) string {
 		return ""
 	}
 	return newString
+}
+
+func getTimestampAndOffset(regex *regexp.Regexp, timeString string) (int64, int64, error) {
+	separatedValues := regex.Split(timeString, 2)
+	timestamp, err := strconv.ParseInt(separatedValues[0], 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	offset, err := strconv.ParseInt(separatedValues[1], 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	return timestamp, offset, nil
+}
+
+//DotNetJSONTimeToRFC3339 Converts the .Net formatted time returned by the Xero API to a more readable format
+func DotNetJSONTimeToRFC3339(jsonTime string) (string, error) {
+	//The format returned looks like: /Date(1494201600000+0000)/
+	//so first we need to strip out the unnecessary /'s, brackets, and letters
+	numbersAndPlusSymbol := regexp.MustCompile("[0-9+-]")
+	jsonSlice := numbersAndPlusSymbol.FindAllString(jsonTime, -1)
+	//Then we join the resulting array into a string
+	jsonTimeString := strings.Join(jsonSlice[:], "")
+	//if the offset (the bit after the Unix timestamp) is positive (signalled by a + symbol)
+	//then we need to add it to the timestamp and return the result
+	if strings.Contains(jsonTimeString, "+") {
+		plusSymbol := regexp.MustCompile("\\+")
+		timestamp, offset, err := getTimestampAndOffset(plusSymbol, jsonTimeString)
+		if err != nil {
+			return time.Now().Format(time.RFC3339), err
+		}
+		unixTime := time.Unix((timestamp/1000)+offset, 0)
+		return unixTime.Format(time.RFC3339), nil
+	}
+	//if the offset (the bit after the Unix timestamp) is negative (signalled by a - symbol)
+	//then we need to subrtract it from the timestamp and return the result
+	if strings.Contains(jsonTimeString, "-") {
+		minusSymbol := regexp.MustCompile("\\-")
+		timestamp, offset, err := getTimestampAndOffset(minusSymbol, jsonTimeString)
+		if err != nil {
+			return time.Now().Format(time.RFC3339), err
+		}
+		unixTime := time.Unix((timestamp/1000)-offset, 0)
+		return unixTime.Format(time.RFC3339), nil
+	}
+	//If there is no offset then we just return the converted timestamp
+	timestamp, err := strconv.ParseInt(jsonTimeString, 10, 64)
+	if err != nil {
+		return time.Now().Format(time.RFC3339), err
+	}
+	unixTime := time.Unix((timestamp / 1000), 0)
+	return unixTime.Format(time.RFC3339), nil
 }
