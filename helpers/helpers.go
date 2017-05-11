@@ -42,7 +42,7 @@ func getTimestampAndOffset(regex *regexp.Regexp, timeString string) (int64, int6
 }
 
 //DotNetJSONTimeToRFC3339 Converts the .Net formatted time returned by the Xero API to a more readable format
-func DotNetJSONTimeToRFC3339(jsonTime string) (string, error) {
+func DotNetJSONTimeToRFC3339(jsonTime string, isUTC bool) (string, error) {
 	//The format returned looks like: /Date(1494201600000+0000)/
 	//so first we need to strip out the unnecessary /'s, brackets, and letters
 	numbersAndPlusSymbol := regexp.MustCompile("[0-9+-]")
@@ -51,15 +51,15 @@ func DotNetJSONTimeToRFC3339(jsonTime string) (string, error) {
 	jsonTimeString := strings.Join(jsonSlice[:], "")
 	//if the offset (the bit after the Unix timestamp) is positive (signalled by a + symbol)
 	//then we need to add it to the timestamp and return the result
+	var golangTime time.Time
 	if strings.Contains(jsonTimeString, "+") {
 		plusSymbol := regexp.MustCompile("\\+")
 		timestamp, offset, err := getTimestampAndOffset(plusSymbol, jsonTimeString)
 		if err != nil {
 			return time.Now().Format(time.RFC3339), err
 		}
-		unixTime := time.Unix((timestamp/1000)+offset, 0)
-		return unixTime.Format(time.RFC3339), nil
-	}
+		golangTime = time.Unix((timestamp/1000)+offset, 0)
+	} else
 	//if the offset (the bit after the Unix timestamp) is negative (signalled by a - symbol)
 	//then we need to subrtract it from the timestamp and return the result
 	if strings.Contains(jsonTimeString, "-") {
@@ -68,14 +68,23 @@ func DotNetJSONTimeToRFC3339(jsonTime string) (string, error) {
 		if err != nil {
 			return time.Now().Format(time.RFC3339), err
 		}
-		unixTime := time.Unix((timestamp/1000)-offset, 0)
-		return unixTime.Format(time.RFC3339), nil
+		golangTime = time.Unix((timestamp/1000)-offset, 0)
+	} else {
+		//If there is no offset then we just return the converted timestamp
+		timestamp, err := strconv.ParseInt(jsonTimeString, 10, 64)
+		if err != nil {
+			return time.Now().Format(time.RFC3339), err
+		}
+		golangTime = time.Unix((timestamp / 1000), 0)
 	}
-	//If there is no offset then we just return the converted timestamp
-	timestamp, err := strconv.ParseInt(jsonTimeString, 10, 64)
-	if err != nil {
-		return time.Now().Format(time.RFC3339), err
+	formattedTime := golangTime.UTC().Format(time.RFC3339)
+	//The Xero API does not expect an offset. We either need to supply the local time
+	//or the UTC time. If we designate the time format as local golang will add the offset
+	//but if we designate it as UTC it adds a Z suffix. To satisfy the API requirements we
+	//will remove the Z from local times so they aren't seen as UTC times.
+	if isUTC {
+		return formattedTime, nil
+	} else {
+		return strings.TrimSuffix(formattedTime, "Z"), nil
 	}
-	unixTime := time.Unix((timestamp / 1000), 0)
-	return unixTime.Format(time.RFC3339), nil
 }

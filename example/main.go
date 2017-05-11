@@ -64,7 +64,7 @@ func main() {
 	})
 
 	p.Get("/createinvoice", func(res http.ResponseWriter, req *http.Request) {
-		invoiceCollection, err := accounting.CreateInvoice(res, req, provider, store, invoices)
+		invoiceCollection, err := invoices.CreateInvoice(req, provider, store)
 
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -82,7 +82,7 @@ func main() {
 		} else if invoices.Invoices[0].Status == "SUBMITTED" {
 			invoices.Invoices[0].Status = "DRAFT"
 		}
-		invoiceCollection, err := accounting.UpdateInvoice(res, req, provider, store, invoices)
+		invoiceCollection, err := invoices.UpdateInvoice(req, provider, store)
 
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -99,7 +99,11 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3000", p))
 }
 
-var indexTemplate = `<p><a href="/auth/?provider=xero">Connect to Xero</a></p>`
+var indexTemplate = `<p>
+		<a href="/auth/?provider=xero">
+			<img src="https://developer.xero.com/static/images/documentation/connect_xero_button_blue_2x.png" alt="ConnectToXero">
+		</a>
+	</p>`
 
 var userTemplate = `
 <p><a href="/logout?provider=xero">logout</a></p>
@@ -123,5 +127,6 @@ var invoiceTemplate = `
 <p>Total: {{.Total}}</p>
 <p>AmountDue: {{.AmountDue}}</p>
 <p>AmountPaid: {{.AmountPaid}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/updateinvoice?provider=xero">update status of this invoice</a></p>
 `

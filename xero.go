@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/TheRegan/Xero-Golang/helpers"
-	"github.com/TheRegan/Xero-Golang/model"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
@@ -37,6 +36,61 @@ var (
 	acceptType = os.Getenv("XERO_ACCEPT_TYPE")
 )
 
+// Provider is the implementation of `goth.Provider` for accessing Xero.
+type Provider struct {
+	ClientKey    string
+	Secret       string
+	CallbackURL  string
+	HTTPClient   *http.Client
+	Method       string
+	debug        bool
+	consumer     *oauth.Consumer
+	providerName string
+}
+
+//newPublicConsumer creates a consumer capable of communicating with a Public application: https://developer.xero.com/documentation/auth-and-limits/public-applications
+func (p *Provider) newPublicConsumer(authURL string) *oauth.Consumer {
+	c := oauth.NewConsumer(
+		p.ClientKey,
+		p.Secret,
+		oauth.ServiceProvider{
+			RequestTokenUrl:   requestURL,
+			AuthorizeTokenUrl: authURL,
+			AccessTokenUrl:    tokenURL},
+	)
+
+	c.Debug(p.debug)
+
+	return c
+}
+
+//newPartnerConsumer creates a consumer capable of communicating with a Partner application: https://developer.xero.com/documentation/auth-and-limits/partner-applications
+func (p *Provider) newPrivateOrPartnerConsumer(authURL string) *oauth.Consumer {
+	privateKeyFileContents, err := ioutil.ReadFile(privateKeyFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	block, _ := pem.Decode([]byte(privateKeyFileContents))
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	c := oauth.NewRSAConsumer(
+		p.ClientKey,
+		privateKey,
+		oauth.ServiceProvider{
+			RequestTokenUrl:   requestURL,
+			AuthorizeTokenUrl: authURL,
+			AccessTokenUrl:    tokenURL},
+	)
+
+	c.Debug(p.debug)
+
+	return c
+}
+
 // New creates a new Xero provider, and sets up important connection details.
 // You should always call `xero.New` to get a new Provider. Never try to create
 // one manually.
@@ -55,27 +109,15 @@ func New(clientKey, secret, callbackURL string) *Provider {
 
 	switch p.Method {
 	case "private":
-		p.consumer = newPrivateOrPartnerConsumer(p, authorizeURL)
+		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
 	case "public":
-		p.consumer = newPublicConsumer(p, authorizeURL)
+		p.consumer = p.newPublicConsumer(authorizeURL)
 	case "partner":
-		p.consumer = newPrivateOrPartnerConsumer(p, authorizeURL)
+		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
 	default:
-		p.consumer = newPublicConsumer(p, authorizeURL)
+		p.consumer = p.newPublicConsumer(authorizeURL)
 	}
 	return p
-}
-
-// Provider is the implementation of `goth.Provider` for accessing Xero.
-type Provider struct {
-	ClientKey    string
-	Secret       string
-	CallbackURL  string
-	HTTPClient   *http.Client
-	Method       string
-	debug        bool
-	consumer     *oauth.Consumer
-	providerName string
 }
 
 // Name is the name used to retrieve this provider later.
@@ -170,36 +212,6 @@ func (p *Provider) ProcessRequest(request *http.Request, session *Session) ([]by
 	return responseBytes, nil
 }
 
-// FetchUser will go to Xero and access basic information about the user.
-func (p *Provider) FetchUser(session goth.Session) (goth.User, error) {
-	sess := session.(*Session)
-	user := goth.User{
-		Provider: p.Name(),
-	}
-
-	responseBytes, err := p.Find(sess, "Organisation")
-	if err != nil {
-		return user, err
-	}
-	var organisationCollection model.OrganisationCollection
-	err = json.Unmarshal(responseBytes, &organisationCollection)
-	if err != nil {
-		return user, fmt.Errorf("Could not unmarshal response: %s", err.Error())
-	}
-
-	user.Name = organisationCollection.Organisations[0].Name
-	user.NickName = organisationCollection.Organisations[0].LegalName
-	user.Location = organisationCollection.Organisations[0].CountryCode
-	user.Description = organisationCollection.Organisations[0].OrganisationType
-	user.UserID = organisationCollection.Organisations[0].ShortCode
-
-	user.AccessToken = sess.AccessToken.Token
-	user.AccessTokenSecret = sess.AccessToken.Secret
-	user.ExpiresAt = sess.AccessTokenExpires
-	user.Email = p.Method
-	return user, err
-}
-
 //Find retrieves the requested data from an endpoint to be unmarshaled into the appropriate data type
 func (p *Provider) Find(session goth.Session, endpoint string) ([]byte, error) {
 	sess := session.(*Session)
@@ -272,47 +284,58 @@ func (p *Provider) Remove(session goth.Session, endpoint string) ([]byte, error)
 	return p.ProcessRequest(request, sess)
 }
 
-//newPublicConsumer creates a consumer capable of communicating with a Public application: https://developer.xero.com/documentation/auth-and-limits/public-applications
-func newPublicConsumer(provider *Provider, authURL string) *oauth.Consumer {
-	c := oauth.NewConsumer(
-		provider.ClientKey,
-		provider.Secret,
-		oauth.ServiceProvider{
-			RequestTokenUrl:   requestURL,
-			AuthorizeTokenUrl: authURL,
-			AccessTokenUrl:    tokenURL},
-	)
+//Organisation is the expected response from the Organisation endpoint - this is not a complete schema
+//and should only be used by FetchUser
+type Organisation struct {
+	// Display name of organisation shown in Xero
+	Name string `json:"Name,omitempty"`
 
-	c.Debug(provider.debug)
+	// Organisation name shown on Reports
+	LegalName string `json:"LegalName,omitempty"`
 
-	return c
+	// Organisation Type
+	OrganisationType string `json:"OrganisationType,omitempty"`
+
+	// Country code for organisation. See ISO 3166-2 Country Codes
+	CountryCode string `json:"CountryCode,omitempty"`
+
+	// A unique identifier for the organisation.
+	ShortCode string `json:"ShortCode,omitempty"`
 }
 
-//newPartnerConsumer creates a consumer capable of communicating with a Partner application: https://developer.xero.com/documentation/auth-and-limits/partner-applications
-func newPrivateOrPartnerConsumer(provider *Provider, authURL string) *oauth.Consumer {
-	privateKeyFileContents, err := ioutil.ReadFile(privateKeyFilePath)
-	if err != nil {
-		log.Fatal(err)
+//OrganisationCollection is the Total response from the Xero API
+type OrganisationCollection struct {
+	Organisations []Organisation `json:"Organisations,omitempty"`
+}
+
+// FetchUser will go to Xero and access basic information about the user.
+func (p *Provider) FetchUser(session goth.Session) (goth.User, error) {
+	sess := session.(*Session)
+	user := goth.User{
+		Provider: p.Name(),
 	}
 
-	block, _ := pem.Decode([]byte(privateKeyFileContents))
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	responseBytes, err := p.Find(sess, "Organisation")
 	if err != nil {
-		log.Fatal(err)
+		return user, err
 	}
-	c := oauth.NewRSAConsumer(
-		provider.ClientKey,
-		privateKey,
-		oauth.ServiceProvider{
-			RequestTokenUrl:   requestURL,
-			AuthorizeTokenUrl: authURL,
-			AccessTokenUrl:    tokenURL},
-	)
+	var organisationCollection OrganisationCollection
+	err = json.Unmarshal(responseBytes, &organisationCollection)
+	if err != nil {
+		return user, fmt.Errorf("Could not unmarshal response: %s", err.Error())
+	}
 
-	c.Debug(provider.debug)
+	user.Name = organisationCollection.Organisations[0].Name
+	user.NickName = organisationCollection.Organisations[0].LegalName
+	user.Location = organisationCollection.Organisations[0].CountryCode
+	user.Description = organisationCollection.Organisations[0].OrganisationType
+	user.UserID = organisationCollection.Organisations[0].ShortCode
 
-	return c
+	user.AccessToken = sess.AccessToken.Token
+	user.AccessTokenSecret = sess.AccessToken.Secret
+	user.ExpiresAt = sess.AccessTokenExpires
+	user.Email = p.Method
+	return user, err
 }
 
 //RefreshOAuth1Token should be used instead of RefeshToken which is not compliant with the Oauth1.0a standard
