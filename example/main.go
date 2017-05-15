@@ -19,7 +19,7 @@ import (
 
 var (
 	store    = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
-	invoices = accounting.CreateExampleInvoice()
+	invoices = new(accounting.Invoices)
 )
 
 func init() {
@@ -37,7 +37,6 @@ func main() {
 
 	p := pat.New()
 	p.Get("/auth/callback", func(res http.ResponseWriter, req *http.Request) {
-
 		user, err := gothic.CompleteUserAuth(res, req)
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -64,8 +63,13 @@ func main() {
 	})
 
 	p.Get("/createinvoice", func(res http.ResponseWriter, req *http.Request) {
-		invoiceCollection, err := invoices.CreateInvoice(req, provider, store)
-
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoices = accounting.CreateExampleInvoice()
+		invoiceCollection, err := invoices.CreateInvoice(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -77,16 +81,61 @@ func main() {
 	})
 
 	p.Get("/updateinvoice", func(res http.ResponseWriter, req *http.Request) {
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoiceID := req.URL.Query().Get("invoiceID")
+		if invoiceID != invoices.Invoices[0].InvoiceID {
+			fmt.Fprintln(res, "Could not update Invoice")
+			return
+		}
 		if invoices.Invoices[0].Status == "DRAFT" {
 			invoices.Invoices[0].Status = "SUBMITTED"
 		} else if invoices.Invoices[0].Status == "SUBMITTED" {
 			invoices.Invoices[0].Status = "DRAFT"
 		}
-		invoiceCollection, err := invoices.UpdateInvoice(req, provider, store)
 
+		invoiceCollection, err := invoices.UpdateInvoice(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
+		}
+		t, _ := template.New("foo").Parse(invoiceTemplate)
+		t.Execute(res, invoiceCollection.Invoices[0])
+	})
+
+	p.Get("/findallinvoices", func(res http.ResponseWriter, req *http.Request) {
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoiceCollection, err := accounting.FindAllInvoices(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(invoicesTemplate)
+		t.Execute(res, invoiceCollection.Invoices)
+	})
+
+	p.Get("/findinvoice", func(res http.ResponseWriter, req *http.Request) {
+		invoiceID := req.URL.Query().Get("invoiceID")
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoiceCollection, err := accounting.FindIndividualInvoice(provider, session, invoiceID)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoices = invoiceCollection
+		invoices.Invoices[0].Contact = accounting.Contact{
+			ContactID: invoiceCollection.Invoices[0].Contact.ContactID,
 		}
 		t, _ := template.New("foo").Parse(invoiceTemplate)
 		t.Execute(res, invoiceCollection.Invoices[0])
@@ -116,9 +165,34 @@ var userTemplate = `
 <p>AccessToken: {{.AccessToken}}</p>
 <p>ExpiresAt: {{.ExpiresAt}}</p>
 <p><a href="/createinvoice?provider=xero">create invoice</a></p>
+<p><a href="/findallinvoices?provider=xero">find all invoices</a></p>
 `
+
 var invoiceTemplate = `
 <p><a href="/logout?provider=xero">logout</a></p>
+<p>ID: {{.InvoiceID}}</p>
+<p>Invoice Number: {{.InvoiceNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .LineItems}}
+<p>LineItems: </p>
+{{range .LineItems}}
+	<p>--  Description:{{.Description}}  |  Quantity:{{.Quantity}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>Total: {{.Total}}</p>
+<p>AmountDue: {{.AmountDue}}</p>
+<p>AmountPaid: {{.AmountPaid}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/updateinvoice?provider=xero&invoiceID={{.InvoiceID}}">update status of this invoice</a></p>
+`
+
+var invoicesTemplate = `
+<p><a href="/logout?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
 <p>ID: {{.InvoiceID}}</p>
 <p>Invoice Number: {{.InvoiceNumber}}</p>
 <p>Contact: {{.Contact.Name}}</p>
@@ -128,5 +202,7 @@ var invoiceTemplate = `
 <p>AmountDue: {{.AmountDue}}</p>
 <p>AmountPaid: {{.AmountPaid}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
-<p><a href="/updateinvoice?provider=xero">update status of this invoice</a></p>
+<p><a href="/findinvoice?provider=xero&invoiceID={{.InvoiceID}}">See details of this invoice</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
 `

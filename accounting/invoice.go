@@ -3,13 +3,12 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"net/http"
 	"strings"
 	"time"
 
 	xero "github.com/TheRegan/Xero-Golang"
 	"github.com/TheRegan/Xero-Golang/helpers"
-	"github.com/gorilla/sessions"
+	"github.com/markbates/goth"
 )
 
 //Invoice is an Accounts Payable or Accounts Recievable document in a Xero organisation
@@ -21,7 +20,7 @@ type Invoice struct {
 	Contact Contact `json:"Contact" xml:"Contact"`
 
 	// See LineItems
-	LineItems []LineItem `json:"LineItems>LineItem" xml:"LineItems>LineItem"`
+	LineItems []LineItem `json:"LineItems" xml:"LineItems>LineItem"`
 
 	// Date invoice was issued – YYYY-MM-DD. If the Date element is not specified it will default to the current date based on the timezone setting of the organisation
 	Date string `json:"DateString,omitempty" xml:"Date,omitempty"`
@@ -127,15 +126,25 @@ func (i *Invoices) convertInvoiceDates() error {
 	return nil
 }
 
-//CreateInvoice will create invoices given an Invoices struct
-func (i *Invoices) CreateInvoice(req *http.Request, provider *xero.Provider, store sessions.Store) (*Invoices, error) {
-
-	body, err := xml.MarshalIndent(i, "  ", "	")
+func unmarshalInvoice(invoiceResponseBytes []byte) (*Invoices, error) {
+	var invoiceResponse *Invoices
+	err := json.Unmarshal(invoiceResponseBytes, &invoiceResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	session, err := provider.GetSessionFromStore(req, store)
+	err = invoiceResponse.convertInvoiceDates()
+	if err != nil {
+		return nil, err
+	}
+
+	return invoiceResponse, err
+}
+
+//CreateInvoice will create invoices given an Invoices struct
+func (i *Invoices) CreateInvoice(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+
+	body, err := xml.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -145,30 +154,14 @@ func (i *Invoices) CreateInvoice(req *http.Request, provider *xero.Provider, sto
 		return nil, err
 	}
 
-	var invoiceResponse *Invoices
-	err = json.Unmarshal(invoiceResponseBytes, &invoiceResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	err = invoiceResponse.convertInvoiceDates()
-	if err != nil {
-		return nil, err
-	}
-
-	return invoiceResponse, err
+	return unmarshalInvoice(invoiceResponseBytes)
 }
 
 //UpdateInvoice will update an invoice given an Invoices struct
 //This will only handle single invoice - you cannot update multiple invoices in a single call
-func (i *Invoices) UpdateInvoice(req *http.Request, provider *xero.Provider, store sessions.Store) (*Invoices, error) {
+func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) (*Invoices, error) {
 
 	body, err := xml.MarshalIndent(i, "  ", "	")
-	if err != nil {
-		return nil, err
-	}
-
-	session, err := provider.GetSessionFromStore(req, store)
 	if err != nil {
 		return nil, err
 	}
@@ -178,21 +171,30 @@ func (i *Invoices) UpdateInvoice(req *http.Request, provider *xero.Provider, sto
 		return nil, err
 	}
 
-	var invoiceResponse *Invoices
-	err = json.Unmarshal(invoiceResponseBytes, &invoiceResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	err = invoiceResponse.convertInvoiceDates()
-	if err != nil {
-		return nil, err
-	}
-
-	return invoiceResponse, err
+	return unmarshalInvoice(invoiceResponseBytes)
 }
 
-//func GetAllInvoices()
+//FindAllInvoices will get all invoices
+func FindAllInvoices(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+
+	invoiceResponseBytes, err := provider.Find(session, "Invoices")
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalInvoice(invoiceResponseBytes)
+}
+
+//FindIndividualInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number
+func FindIndividualInvoice(provider *xero.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
+
+	invoiceResponseBytes, err := provider.Find(session, "Invoices/"+invoiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalInvoice(invoiceResponseBytes)
+}
 
 //CreateExampleInvoice Creates an Example invoice
 func CreateExampleInvoice() *Invoices {

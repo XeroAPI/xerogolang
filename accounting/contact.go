@@ -90,7 +90,7 @@ type Contact struct {
 	Website string `json:"Website,omitempty" xml:"Website,omitempty"`
 
 	// batch payment details for contact (read only)
-	BatchPayments string `json:"BatchPayments,omitempty" xml:"BatchPayments,omitempty"`
+	BatchPayments BatchPayment `json:"BatchPayments,omitempty" xml:"BatchPayments,omitempty"`
 
 	// The default discount rate for the contact (read only)
 	Discount float32 `json:"Discount,omitempty" xml:"Discount,omitempty"`
