@@ -213,8 +213,8 @@ func FindAllInvoices(provider *xero.Provider, session goth.Session) (*Invoices, 
 	return FindAllInvoicesModifiedSince(provider, session, dayZero)
 }
 
-//FindIndividualInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number
-func FindIndividualInvoice(provider *xero.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
+//FindInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number
+func FindInvoice(provider *xero.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

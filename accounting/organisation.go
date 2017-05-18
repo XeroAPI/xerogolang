@@ -1,5 +1,13 @@
 package accounting
 
+import (
+	"encoding/json"
+
+	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/markbates/goth"
+)
+
 //Organisation is information about a Xero organisation
 type Organisation struct {
 
@@ -88,7 +96,36 @@ type Organisation struct {
 	ExternalLinks []ExternalLink `json:"ExternalLinks,omitempty"`
 }
 
-//OrganisationCollection contains a collection of Organisations - but there will only ever be one like Highlander
+//OrganisationCollection contains a collection of Organisations - but there will only ever be one. Like Highlander
 type OrganisationCollection struct {
 	Organisations []Organisation `json:"Organisations,omitempty"`
+}
+
+//FindOrganisation returns details about the Xero organisation you're connected to
+func FindOrganisation(provider *xero.Provider, session goth.Session) (*OrganisationCollection, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	organisationResponseBytes, err := provider.Find(session, "Organisation", additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	var organisationResponse *OrganisationCollection
+	err = json.Unmarshal(organisationResponseBytes, &organisationResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	organisationResponse.Organisations[0].PeriodLockDate, err = helpers.DotNetJSONTimeToRFC3339(organisationResponse.Organisations[0].PeriodLockDate, false)
+	if err != nil {
+		return nil, err
+	}
+	organisationResponse.Organisations[0].CreatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(organisationResponse.Organisations[0].CreatedDateUTC, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return organisationResponse, nil
 }

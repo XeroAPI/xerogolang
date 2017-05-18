@@ -167,7 +167,7 @@ func main() {
 			fmt.Fprintln(res, err)
 			return
 		}
-		invoiceCollection, err := accounting.FindIndividualInvoice(provider, session, invoiceID)
+		invoiceCollection, err := accounting.FindInvoice(provider, session, invoiceID)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -181,17 +181,38 @@ func main() {
 	})
 
 	p.Get("/", func(res http.ResponseWriter, req *http.Request) {
-		t, _ := template.New("foo").Parse(indexTemplate)
-		t.Execute(res, nil)
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil || session == nil {
+			t, _ := template.New("foo").Parse(indexNotConnectedTemplate)
+			t.Execute(res, nil)
+		} else {
+			organisationCollection, err := accounting.FindOrganisation(provider, session)
+			if err != nil {
+				fmt.Fprintln(res, err)
+				return
+			}
+			t, _ := template.New("foo").Parse(indexConnectedTemplate)
+			t.Execute(res, organisationCollection.Organisations[0])
+		}
 	})
 	log.Fatal(http.ListenAndServe(":3000", p))
 }
 
-var indexTemplate = `<p>
+var indexNotConnectedTemplate = `<p>
 		<a href="/auth/?provider=xero">
 			<img src="https://developer.xero.com/static/images/documentation/connect_xero_button_blue_2x.png" alt="ConnectToXero">
 		</a>
 	</p>`
+
+var indexConnectedTemplate = `
+<p><a href="/logout?provider=xero">Disconnect</a></p>
+<p>Connected to: {{.Name}}</p>
+<p>Actions:</p>
+<p><a href="/createinvoice?provider=xero">create invoice</a></p>
+<p><a href="/findallinvoices?provider=xero">find all invoices</a></p>
+<p><a href="/thismonthsinvoices?provider=xero">find all invoices changed this month</a></p>
+<p><a href="/pagedinvoices?provider=xero&page=1">find the first 100 invoices</a></p>
+`
 
 var userTemplate = `
 <p><a href="/logout?provider=xero">logout</a></p>
