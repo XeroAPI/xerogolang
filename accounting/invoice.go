@@ -3,6 +3,7 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
+	"strconv"
 	"strings"
 	"time"
 
@@ -112,6 +113,10 @@ type Invoices struct {
 	Invoices []Invoice `json:"Invoices" xml:"Invoice"`
 }
 
+var (
+	dayZero = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+)
+
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
 func (i *Invoices) convertInvoiceDates() error {
@@ -143,13 +148,17 @@ func unmarshalInvoice(invoiceResponseBytes []byte) (*Invoices, error) {
 
 //CreateInvoice will create invoices given an Invoices struct
 func (i *Invoices) CreateInvoice(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
 
 	body, err := xml.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
 
-	invoiceResponseBytes, err := provider.Create(session, "Invoices", body)
+	invoiceResponseBytes, err := provider.Create(session, "Invoices", additionalHeaders, body)
 	if err != nil {
 		return nil, err
 	}
@@ -160,13 +169,17 @@ func (i *Invoices) CreateInvoice(provider *xero.Provider, session goth.Session) 
 //UpdateInvoice will update an invoice given an Invoices struct
 //This will only handle single invoice - you cannot update multiple invoices in a single call
 func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
 
 	body, err := xml.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
 
-	invoiceResponseBytes, err := provider.Update(session, "Invoices/"+i.Invoices[0].InvoiceID, body)
+	invoiceResponseBytes, err := provider.Update(session, "Invoices/"+i.Invoices[0].InvoiceID, additionalHeaders, body)
 	if err != nil {
 		return nil, err
 	}
@@ -174,26 +187,72 @@ func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) 
 	return unmarshalInvoice(invoiceResponseBytes)
 }
 
-//FindAllInvoices will get all invoices
-func FindAllInvoices(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+//FindAllInvoicesModifiedSince will get all invoices modified after a specified date.
+//These invoice will not have details like line items.
+//If you need details then use FindInvoicesByPage and get 100 invoices at a time
+func FindAllInvoicesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Invoices, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
 
-	invoiceResponseBytes, err := provider.Find(session, "Invoices")
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	invoiceResponseBytes, err := provider.Find(session, "Invoices", additionalHeaders)
 	if err != nil {
 		return nil, err
 	}
 
 	return unmarshalInvoice(invoiceResponseBytes)
+}
+
+//FindAllInvoices will get all invoices. These invoice will not have details like line items.
+//If you need details then use FindInvoicesByPage and get 100 invoices at a time
+func FindAllInvoices(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+	return FindAllInvoicesModifiedSince(provider, session, dayZero)
 }
 
 //FindIndividualInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number
 func FindIndividualInvoice(provider *xero.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
 
-	invoiceResponseBytes, err := provider.Find(session, "Invoices/"+invoiceID)
+	invoiceResponseBytes, err := provider.Find(session, "Invoices/"+invoiceID, additionalHeaders)
 	if err != nil {
 		return nil, err
 	}
 
 	return unmarshalInvoice(invoiceResponseBytes)
+}
+
+//FindInvoicesByPageModifiedSince will get a specified page of invoices which contains 100 invoices modified
+//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
+//Paged invoices contain all the detail of the invoices whereas if you use FindAllInvoices
+//you will only get summarised data e.g. no line items
+func FindInvoicesByPageModifiedSince(provider *xero.Provider, session goth.Session, page int, modifiedSince time.Time) (*Invoices, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	invoiceResponseBytes, err := provider.Find(session, "Invoices?page="+strconv.Itoa(page), additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalInvoice(invoiceResponseBytes)
+}
+
+//FindInvoicesByPage will get a specified page of invoices which contains 100 invoices
+//Page 1 gives the first 100, page two the next 100 etc etc.
+//paged invoices contain all the detail of the invoices whereas if you use FindAllInvoices
+//you will only get summarised data e.g. no line items
+func FindInvoicesByPage(provider *xero.Provider, session goth.Session, page int) (*Invoices, error) {
+	return FindInvoicesByPageModifiedSince(provider, session, page, dayZero)
 }
 
 //CreateExampleInvoice Creates an Example invoice

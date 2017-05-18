@@ -31,8 +31,6 @@ var (
 	//You only need this for private and partner Applications
 	//more details here: https://developer.xero.com/documentation/api-guides/create-publicprivate-key
 	privateKeyFilePath = os.Getenv("XERO_PRIVATE_KEY_PATH")
-	//acceptType should be set to “application/json” - this SDK does not parse XML responses currently
-	acceptType = os.Getenv("XERO_ACCEPT_TYPE")
 )
 
 // Provider is the implementation of `goth.Provider` for accessing Xero.
@@ -167,18 +165,17 @@ func (p *Provider) BeginAuth(state string) (goth.Session, error) {
 }
 
 //ProcessRequest processes a request prior to it being sent to the API
-func (p *Provider) ProcessRequest(request *http.Request, session goth.Session) ([]byte, error) {
+func (p *Provider) ProcessRequest(request *http.Request, session goth.Session, additionalHeaders map[string]string) ([]byte, error) {
 	sess := session.(*Session)
 
 	if sess.AccessToken == nil {
 		// data is not yet retrieved since accessToken is still empty
 		return nil, fmt.Errorf("%s cannot process request without accessToken", p.providerName)
 	}
-	request.Header.Add("Accept", acceptType)
+
 	request.Header.Add("User-Agent", userAgentString)
-	//We have to PUT and POST using XML so we specify the content type here.
-	if request.Method == "PUT" || request.Method == "POST" {
-		request.Header.Add("Content-Type", "application/xml")
+	for key, value := range additionalHeaders {
+		request.Header.Add(key, value)
 	}
 
 	client, err := p.consumer.MakeHttpClient(sess.AccessToken)
@@ -214,17 +211,17 @@ func (p *Provider) ProcessRequest(request *http.Request, session goth.Session) (
 }
 
 //Find retrieves the requested data from an endpoint to be unmarshaled into the appropriate data type
-func (p *Provider) Find(session goth.Session, endpoint string) ([]byte, error) {
+func (p *Provider) Find(session goth.Session, endpoint string, additionalHeaders map[string]string) ([]byte, error) {
 	request, err := http.NewRequest("GET", endpointProfile+endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session)
+	return p.ProcessRequest(request, session, additionalHeaders)
 }
 
 //Create sends data to an endpoint and returns a response to be unmarshaled into the appropriate data type
-func (p *Provider) Create(session goth.Session, endpoint string, body []byte) ([]byte, error) {
+func (p *Provider) Create(session goth.Session, endpoint string, additionalHeaders map[string]string, body []byte) ([]byte, error) {
 	bodyReader := bytes.NewReader(body)
 
 	request, err := http.NewRequest("PUT", endpointProfile+endpoint, bodyReader)
@@ -232,11 +229,11 @@ func (p *Provider) Create(session goth.Session, endpoint string, body []byte) ([
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session)
+	return p.ProcessRequest(request, session, additionalHeaders)
 }
 
 //Update sends data to an endpoint and returns a response to be unmarshaled into the appropriate data type
-func (p *Provider) Update(session goth.Session, endpoint string, body []byte) ([]byte, error) {
+func (p *Provider) Update(session goth.Session, endpoint string, additionalHeaders map[string]string, body []byte) ([]byte, error) {
 	bodyReader := bytes.NewReader(body)
 
 	request, err := http.NewRequest("POST", endpointProfile+endpoint, bodyReader)
@@ -244,17 +241,17 @@ func (p *Provider) Update(session goth.Session, endpoint string, body []byte) ([
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session)
+	return p.ProcessRequest(request, session, additionalHeaders)
 }
 
 //Remove deletes the specified data from an endpoint
-func (p *Provider) Remove(session goth.Session, endpoint string) ([]byte, error) {
+func (p *Provider) Remove(session goth.Session, additionalHeaders map[string]string, endpoint string) ([]byte, error) {
 	request, err := http.NewRequest("DELETE", endpointProfile+endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session)
+	return p.ProcessRequest(request, session, additionalHeaders)
 }
 
 //Organisation is the expected response from the Organisation endpoint - this is not a complete schema
@@ -287,8 +284,10 @@ func (p *Provider) FetchUser(session goth.Session) (goth.User, error) {
 	user := goth.User{
 		Provider: p.Name(),
 	}
-
-	responseBytes, err := p.Find(sess, "Organisation")
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+	responseBytes, err := p.Find(sess, "Organisation", additionalHeaders)
 	if err != nil {
 		return user, err
 	}
@@ -355,9 +354,8 @@ func (p *Provider) GetSessionFromStore(request *http.Request, response http.Resp
 			sessionMarshalled.Values["xero"] = sess.Marshal()
 			err = sessionMarshalled.Save(request, response)
 			return session, err
-		} else {
-			return nil, errors.New("access token has expired - please reconnect")
 		}
+		return nil, errors.New("access token has expired - please reconnect")
 	}
 	return session, err
 }

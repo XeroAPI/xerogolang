@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	"log"
 	"math"
@@ -121,6 +123,43 @@ func main() {
 		t.Execute(res, invoiceCollection.Invoices)
 	})
 
+	p.Get("/thismonthsinvoices", func(res http.ResponseWriter, req *http.Request) {
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		now := time.Now()
+		firstOfTheMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+		invoiceCollection, err := accounting.FindAllInvoicesModifiedSince(provider, session, firstOfTheMonth)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(invoicesTemplate)
+		t.Execute(res, invoiceCollection.Invoices)
+	})
+
+	p.Get("/pagedinvoices", func(res http.ResponseWriter, req *http.Request) {
+		page, err := strconv.Atoi(req.URL.Query().Get("page"))
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		session, err := provider.GetSessionFromStore(req, res)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		invoiceCollection, err := accounting.FindInvoicesByPage(provider, session, page)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(invoicesTemplate)
+		t.Execute(res, invoiceCollection.Invoices)
+	})
+
 	p.Get("/findinvoice", func(res http.ResponseWriter, req *http.Request) {
 		invoiceID := req.URL.Query().Get("invoiceID")
 		session, err := provider.GetSessionFromStore(req, res)
@@ -166,6 +205,8 @@ var userTemplate = `
 <p>ExpiresAt: {{.ExpiresAt}}</p>
 <p><a href="/createinvoice?provider=xero">create invoice</a></p>
 <p><a href="/findallinvoices?provider=xero">find all invoices</a></p>
+<p><a href="/thismonthsinvoices?provider=xero">find all invoices changed this month</a></p>
+<p><a href="/pagedinvoices?provider=xero&page=1">find the first 100 invoices</a></p>
 `
 
 var invoiceTemplate = `
