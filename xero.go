@@ -245,7 +245,7 @@ func (p *Provider) Update(session goth.Session, endpoint string, additionalHeade
 }
 
 //Remove deletes the specified data from an endpoint
-func (p *Provider) Remove(session goth.Session, additionalHeaders map[string]string, endpoint string) ([]byte, error) {
+func (p *Provider) Remove(session goth.Session, endpoint string, additionalHeaders map[string]string) ([]byte, error) {
 	request, err := http.NewRequest("DELETE", endpointProfile+endpoint, nil)
 	if err != nil {
 		return nil, err

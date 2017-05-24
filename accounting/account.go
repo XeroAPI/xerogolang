@@ -1,5 +1,16 @@
 package accounting
 
+import (
+	"encoding/json"
+	"encoding/xml"
+	"strconv"
+	"time"
+
+	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/markbates/goth"
+)
+
 //Account represents individual accounts in a Xero organisation
 type Account struct {
 
@@ -40,25 +51,199 @@ type Account struct {
 	AccountID string `json:"AccountID,omitempty" xml:"AccountID,omitempty"`
 
 	// See Account Class Types
-	Class string `json:"Class,omitempty" xml:"Class,omitempty"`
+	Class string `json:"Class,omitempty" xml:"-"`
 
 	// If this is a system account then this element is returned. See System Account types. Note that non-system accounts may have this element set as either “” or null.
-	SystemAccount string `json:"SystemAccount,omitempty" xml:"SystemAccount,omitempty"`
+	SystemAccount string `json:"SystemAccount,omitempty" xml:"-"`
 
 	// Shown if set
-	ReportingCode string `json:"ReportingCode,omitempty" xml:"ReportingCode,omitempty"`
+	ReportingCode string `json:"ReportingCode,omitempty" xml:"-"`
 
 	// Shown if set
-	ReportingCodeName string `json:"ReportingCodeName,omitempty" xml:"RepostingCodeName,omitempty"`
+	ReportingCodeName string `json:"ReportingCodeName,omitempty" xml:"-"`
 
 	// boolean to indicate if an account has an attachment (read only)
-	HasAttachments bool `json:"HasAttachments,omitempty" xml:"HasAttachments,omitempty"`
+	HasAttachments bool `json:"HasAttachments,omitempty" xml:"-"`
 
 	// Last modified date UTC format
-	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"UpdatedDateUTC,omitempty"`
+	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
 }
 
-//AccountResponse contains a collection of Accounts
-type AccountResponse struct {
-	Accounts []Account `json:"Accounts,omitempty" xml:"Accounts,omitempty"`
+//Accounts contains a collection of Accounts
+type Accounts struct {
+	Accounts []Account `json:"Accounts,omitempty" xml:"Account,omitempty"`
+}
+
+//The Xero API returns Dates based on the .Net JSON date format available at the time of development
+//We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
+func (a *Accounts) convertAccountDates() error {
+	var err error
+	for n := len(a.Accounts) - 1; n >= 0; n-- {
+		a.Accounts[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(a.Accounts[n].UpdatedDateUTC, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func unmarshalAccount(accountResponseBytes []byte) (*Accounts, error) {
+	var accountResponse *Accounts
+	err := json.Unmarshal(accountResponseBytes, &accountResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	err = accountResponse.convertAccountDates()
+	if err != nil {
+		return nil, err
+	}
+
+	return accountResponse, err
+}
+
+//CreateAccount will create accounts given an Accounts struct
+func (a *Accounts) CreateAccount(provider *xero.Provider, session goth.Session) (*Accounts, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(a, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	accountResponseBytes, err := provider.Create(session, "Accounts", additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalAccount(accountResponseBytes)
+}
+
+//UpdateAccount will update an account given an Accounts struct
+//This will only handle single account - you cannot update multiple accounts in a single call
+func (a *Accounts) UpdateAccount(provider *xero.Provider, session goth.Session) (*Accounts, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(a, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	accountResponseBytes, err := provider.Update(session, "Accounts/"+a.Accounts[0].AccountID, additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalAccount(accountResponseBytes)
+}
+
+//FindAllAccountsModifiedSince will get all accounts modified after a specified date.
+//These account will not have details like line items.
+//If you need details then use FindAccountsByPage and get 100 accounts at a time
+func FindAllAccountsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Accounts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	accountResponseBytes, err := provider.Find(session, "Accounts", additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalAccount(accountResponseBytes)
+}
+
+//FindAllAccounts will get all accounts. These account will not have details like line items.
+//If you need details then use FindAccountsByPage and get 100 accounts at a time
+func FindAllAccounts(provider *xero.Provider, session goth.Session) (*Accounts, error) {
+	return FindAllAccountsModifiedSince(provider, session, dayZero)
+}
+
+//FindAccount will get a single account - accountID must be a GUID for an account
+func FindAccount(provider *xero.Provider, session goth.Session, accountID string) (*Accounts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	accountResponseBytes, err := provider.Find(session, "Accounts/"+accountID, additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalAccount(accountResponseBytes)
+}
+
+//FindAccountsByPageModifiedSince will get a specified page of accounts which contains 100 accounts modified
+//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
+//Paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
+//you will only get summarised data e.g. no line items
+func FindAccountsByPageModifiedSince(provider *xero.Provider, session goth.Session, page int, modifiedSince time.Time) (*Accounts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	accountResponseBytes, err := provider.Find(session, "Accounts?page="+strconv.Itoa(page), additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalAccount(accountResponseBytes)
+}
+
+//FindAccountsByPage will get a specified page of accounts which contains 100 accounts
+//Page 1 gives the first 100, page two the next 100 etc etc.
+//paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
+//you will only get summarised data e.g. no line items
+func FindAccountsByPage(provider *xero.Provider, session goth.Session, page int) (*Accounts, error) {
+	return FindAccountsByPageModifiedSince(provider, session, page, dayZero)
+}
+
+//RemoveAccount will get a single account - accountID must be a GUID for an account
+func RemoveAccount(provider *xero.Provider, session goth.Session, accountID string) (*Accounts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	accountResponseBytes, err := provider.Remove(session, "Accounts/"+accountID, additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalAccount(accountResponseBytes)
+}
+
+//CreateExampleAccount Creates an Example account
+func CreateExampleAccount() *Accounts {
+	account := Account{
+		Code:                    "9999",
+		Name:                    "Import/Exports",
+		Type:                    "SALES",
+		Status:                  "ACTIVE",
+		Description:             "Proceeds from importing/exporting latex",
+		TaxType:                 "OUTPUT2",
+		EnablePaymentsToAccount: false,
+		ShowInExpenseClaims:     false,
+	}
+
+	accountCollection := &Accounts{
+		Accounts: []Account{},
+	}
+
+	accountCollection.Accounts = append(accountCollection.Accounts, account)
+
+	return accountCollection
 }
