@@ -42,7 +42,7 @@ type Contact struct {
 	SkypeUserName string `json:"SkypeUserName,omitempty" xml:"SkypeUserName,omitempty"`
 
 	// See contact persons
-	ContactPersons []ContactPerson `json:"ContactPersons,omitempty" xml:"ContactPersons>ContactPerson,omitempty"`
+	ContactPersons *[]ContactPerson `json:"ContactPersons,omitempty" xml:"ContactPersons>ContactPerson,omitempty"`
 
 	// Bank account number of contact
 	BankAccountDetails string `json:"BankAccountDetails,omitempty" xml:"BankAccountDetails,omitempty"`
@@ -57,10 +57,10 @@ type Contact struct {
 	AccountsPayableTaxType string `json:"AccountsPayableTaxType,omitempty" xml:"AccountsPayableTaxType,omitempty"`
 
 	// Store certain address types for a contact – see address types
-	Addresses []Address `json:"Addresses,omitempty" xml:"Addresses>Address,omitempty"`
+	Addresses *[]Address `json:"Addresses,omitempty" xml:"Addresses>Address,omitempty"`
 
 	// Store certain phone types for a contact – see phone types
-	Phones []Phone `json:"Phones,omitempty" xml:"Phones>Phone,omitempty"`
+	Phones *[]Phone `json:"Phones,omitempty" xml:"Phones>Phone,omitempty"`
 
 	// true or false – Boolean that describes if a contact that has any AP Contacts entered against them. Cannot be set via PUT or POST – it is automatically set when an accounts payable Contact is generated against this contact.
 	IsSupplier bool `json:"IsSupplier,omitempty" xml:"IsSupplier,omitempty"`
@@ -81,10 +81,10 @@ type Contact struct {
 	PurchasesDefaultAccountCode string `json:"PurchasesDefaultAccountCode,omitempty" xml:"PurchasesDefaultAccountCode,omitempty"`
 
 	// The default sales tracking categories for contacts
-	SalesTrackingCategories []TrackingCategory `json:"SalesTrackingCategories,omitempty" xml:"SalesTrackingCategories>SalesTrackingCategory,omitempty"`
+	SalesTrackingCategories *[]TrackingCategory `json:"SalesTrackingCategories,omitempty" xml:"SalesTrackingCategories>SalesTrackingCategory,omitempty"`
 
 	// The default purchases tracking categories for contacts
-	PurchasesTrackingCategories []TrackingCategory `json:"PurchasesTrackingCategories,omitempty" xml:"PurchasesTrackingCategories>PurchaseTrackingCategory,omitempty"`
+	PurchasesTrackingCategories *[]TrackingCategory `json:"PurchasesTrackingCategories,omitempty" xml:"PurchasesTrackingCategories>PurchaseTrackingCategory,omitempty"`
 
 	// The name of the Tracking Category assigned to the contact under SalesTrackingCategories and PurchasesTrackingCategories
 	TrackingCategoryName string `json:"TrackingCategoryName,omitempty" xml:"TrackingCategoryName,omitempty"`
@@ -96,7 +96,7 @@ type Contact struct {
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
 
 	// Displays which contact groups a contact is included in
-	ContactGroups []ContactGroup `json:"ContactGroups,omitempty" xml:"ContactGroups>ContactGroup,omitempty"`
+	ContactGroups *[]ContactGroup `json:"ContactGroups,omitempty" xml:"ContactGroups>ContactGroup,omitempty"`
 
 	// Website address for contact (read only)
 	Website string `json:"Website,omitempty" xml:"-"`

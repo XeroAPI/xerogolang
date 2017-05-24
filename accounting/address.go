@@ -1,6 +1,7 @@
 package accounting
 
 type Address struct {
+	AddressType string `json:"AddressType,omitempty" xml:"AddressType,omitempty"`
 
 	// max length = 500
 	AddressLine1 string `json:"AddressLine1,omitempty" xml:"AddressLine1,omitempty"`

@@ -20,11 +20,12 @@ import (
 )
 
 var (
-	provider = xero.New(os.Getenv("XERO_KEY"), os.Getenv("XERO_SECRET"), "http://localhost:3000/auth/callback?provider=xero")
-	store    = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
-	invoices = new(accounting.Invoices)
-	contacts = new(accounting.Contacts)
-	accounts = new(accounting.Accounts)
+	provider         = xero.New(os.Getenv("XERO_KEY"), os.Getenv("XERO_SECRET"), "http://localhost:3000/auth/callback?provider=xero")
+	store            = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
+	invoices         = new(accounting.Invoices)
+	contacts         = new(accounting.Contacts)
+	accounts         = new(accounting.Accounts)
+	bankTransactions = new(accounting.BankTransactions)
 )
 
 func init() {
@@ -110,6 +111,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		accounts = accountCollection
 		t, _ := template.New("foo").Parse(accountTemplate)
 		t.Execute(res, accountCollection.Accounts[0])
+	case "banktransaction":
+		bankTransactions = accounting.CreateExampleBankTransaction()
+		bankTransactionCollection, err := bankTransactions.CreateBankTransaction(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		bankTransactions = bankTransactionCollection
+		t, _ := template.New("foo").Parse(bankTransactionTemplate)
+		t.Execute(res, bankTransactionCollection.BankTransactions[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -162,6 +173,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(accountTemplate)
 		t.Execute(res, accountCollection.Accounts[0])
+	case "banktransaction":
+		bankTransactionCollection, err := accounting.FindBankTransaction(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		bankTransactions = bankTransactionCollection
+
+		t, _ := template.New("foo").Parse(bankTransactionTemplate)
+		t.Execute(res, bankTransactionCollection.BankTransactions[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -242,6 +263,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(accountsTemplate)
 		t.Execute(res, accountCollection.Accounts)
+	case "banktransactions":
+		bankTransactionCollection := new(accounting.BankTransactions)
+		var err error
+		if modifiedSince == "" {
+			bankTransactionCollection, err = accounting.FindAllBankTransactions(provider, session)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, err)
+				return
+			}
+			bankTransactionCollection, err = accounting.FindAllBankTransactionsModifiedSince(provider, session, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(bankTransactionsTemplate)
+		t.Execute(res, bankTransactionCollection.BankTransactions)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -309,6 +349,25 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(contactsTemplate)
 		t.Execute(res, contactCollection.Contacts)
+	case "banktransactions":
+		bankTransactionCollection := new(accounting.BankTransactions)
+		var err error
+		if modifiedSince == "" {
+			bankTransactionCollection, err = accounting.FindBankTransactionsByPage(provider, session, pageInt)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			bankTransactionCollection, err = accounting.FindBankTransactionsByPageModifiedSince(provider, session, pageInt, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(bankTransactionsTemplate)
+		t.Execute(res, bankTransactionCollection.BankTransactions)
 	default:
 		fmt.Fprintln(res, "Paging not supported on object specified")
 		return
@@ -383,6 +442,22 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(accountTemplate)
 		t.Execute(res, accountCollection.Accounts[0])
+	case "banktransaction":
+		if id != bankTransactions.BankTransactions[0].BankTransactionID {
+			fmt.Fprintln(res, "Could not update BankTransaction")
+			return
+		}
+		if bankTransactions.BankTransactions[0].Status == "AUTHORISED" {
+			bankTransactions.BankTransactions[0].Status = "DELETED"
+		}
+
+		bankTransactionCollection, err := bankTransactions.UpdateBankTransaction(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(bankTransactionTemplate)
+		t.Execute(res, bankTransactionCollection.BankTransactions[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -439,6 +514,10 @@ var indexConnectedTemplate = `
 <p><a href="/create/account?provider=xero">create account</a></p>
 <p><a href="/findall/accounts?provider=xero">find all accounts</a></p>
 <p><a href="/findall/accounts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all accounts changed since 1 May 2017</a></p>
+<p><a href="/create/banktransaction?provider=xero">create bank transaction</a></p>
+<p><a href="/findall/banktransactions?provider=xero">find all bank transactions</a></p>
+<p><a href="/findall/banktransactions?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transactions changed since 1 May 2017</a></p>
+<p><a href="/findall/banktransactions/1?provider=xero">find the first 100 bank transactions</a></p>
 `
 
 var userTemplate = `
@@ -459,6 +538,10 @@ var userTemplate = `
 <p><a href="/create/account?provider=xero">create account</a></p>
 <p><a href="/findall/accounts?provider=xero">find all accounts</a></p>
 <p><a href="/findall/accounts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all accounts changed since 1 May 2017</a></p>
+<p><a href="/create/banktransaction?provider=xero">create bank transaction</a></p>
+<p><a href="/findall/banktransactions?provider=xero">find all bank transactions</a></p>
+<p><a href="/findall/banktransactions?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transactions changed since 1 May 2017</a></p>
+<p><a href="/findall/banktransactions/1?provider=xero">find the first 100 bank transactions</a></p>
 `
 
 var invoiceTemplate = `
@@ -561,6 +644,40 @@ var accountsTemplate = `
 <p>Enable payments: {{.EnablePaymentsToAccount}}</p>
 <p>Show In Expense Claims: {{.ShowInExpenseClaims}}</p>
 <p><a href="/find/account/{{.AccountID}}?provider=xero">See details of this Account</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+var bankTransactionTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.BankTransactionID}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .LineItems}}
+<p>LineItems: </p>
+{{range .LineItems}}
+	<p>--  Description:{{.Description}}  |  Quantity:{{.Quantity}}  |  Account:{{.AccountCode}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>Bank Account: {{.BankAccount.Code}}</p>
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/banktransaction/{{.BankTransactionID}}?provider=xero">update Status of this bank transaction to Deleted</a></p>
+`
+
+var bankTransactionsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.BankTransactionID}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Bank Account: {{.BankAccount.Code}}</p>
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/banktransaction/{{.BankTransactionID}}?provider=xero">See details of this bank transaction</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `

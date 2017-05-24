@@ -1,6 +1,7 @@
 package accounting
 
 type Phone struct {
+	PhoneType string `json:"PhoneType,omitempty" xml:"PhoneType,omitempty"`
 
 	// max length = 50
 	PhoneNumber string `json:"PhoneNumber,omitempty" xml:"PhoneNumber,omitempty"`
