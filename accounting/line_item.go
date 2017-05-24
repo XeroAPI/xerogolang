@@ -2,6 +2,9 @@ package accounting
 
 //LineItem is a line containing detail on an Invoice
 type LineItem struct {
+	//The Xero generated identifier for a LineItem. It is recommended that you include LineItemIDs on update requests. If LineItemIDs are not included with line items in an update request then the line items are deleted and recreated.
+	LineItemID string `json:"LineItemID,omitempty" xml:"LineItemID,omitempty"`
+
 	// Description needs to be at least 1 char long. A line item with just a description (i.e no unit amount or quantity) can be created by specifying just a <Description> element that contains at least 1 character
 	Description string `json:"Description,omitempty" xml:"Description,omitempty"`
 

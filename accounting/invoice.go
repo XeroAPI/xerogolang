@@ -174,7 +174,53 @@ func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) 
 		"Content-Type": "application/xml",
 	}
 
-	body, err := xml.MarshalIndent(i, "  ", "	")
+	//If we send all details of an invoice to Xero then we'll get a 400 error because some elements
+	//are read only and cannot be updated.  So we need to strip out the read only elements here
+	lineItemsToAdd := []LineItem{}
+	for _, lineItem := range i.Invoices[0].LineItems {
+		lineItemToAdd := LineItem{
+			LineItemID:  lineItem.LineItemID,
+			ItemCode:    lineItem.ItemCode,
+			Description: lineItem.Description,
+			Quantity:    lineItem.Quantity,
+			UnitAmount:  lineItem.UnitAmount,
+			TaxType:     lineItem.TaxType,
+			TaxAmount:   lineItem.TaxAmount,
+			LineAmount:  lineItem.LineAmount,
+			AccountCode: lineItem.AccountCode,
+			Tracking:    lineItem.Tracking,
+		}
+		lineItemsToAdd = append(lineItemsToAdd, lineItemToAdd)
+	}
+
+	invoice := Invoice{
+		Type: i.Invoices[0].Type,
+		Contact: Contact{
+			ContactID: i.Invoices[0].Contact.ContactID,
+		},
+		Date:                i.Invoices[0].Date,
+		DueDate:             i.Invoices[0].DueDate,
+		ExpectedPaymentDate: i.Invoices[0].ExpectedPaymentDate,
+		InvoiceNumber:       i.Invoices[0].InvoiceNumber,
+		Reference:           i.Invoices[0].Reference,
+		BrandingThemeID:     i.Invoices[0].BrandingThemeID,
+		URL:                 i.Invoices[0].URL,
+		CurrencyCode:        i.Invoices[0].CurrencyCode,
+		Status:              i.Invoices[0].Status,
+		LineAmountTypes:     i.Invoices[0].LineAmountTypes,
+		SubTotal:            i.Invoices[0].SubTotal,
+		TotalTax:            i.Invoices[0].TotalTax,
+		Total:               i.Invoices[0].Total,
+		LineItems:           lineItemsToAdd,
+	}
+
+	invoiceCollection := &Invoices{
+		Invoices: []Invoice{},
+	}
+
+	invoiceCollection.Invoices = append(invoiceCollection.Invoices, invoice)
+
+	body, err := xml.MarshalIndent(invoiceCollection, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

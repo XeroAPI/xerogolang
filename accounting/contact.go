@@ -1,5 +1,17 @@
 package accounting
 
+import (
+	"encoding/json"
+	"encoding/xml"
+	"strconv"
+	"time"
+
+	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/markbates/goth"
+)
+
+//Contact is a debtor/customer or creditor/supplier in a Xero Organisation
 type Contact struct {
 
 	// Xero identifier
@@ -38,10 +50,10 @@ type Contact struct {
 	// Tax number of contact – this is also known as the ABN (Australia), GST Number (New Zealand), VAT Number (UK) or Tax ID Number (US and global) in the Xero UI depending on which regionalized version of Xero you are using (max length = 50)
 	TaxNumber string `json:"TaxNumber,omitempty" xml:"TaxNumber,omitempty"`
 
-	// Default tax type used for contact on AR invoices
+	// Default tax type used for contact on AR Contacts
 	AccountsReceivableTaxType string `json:"AccountsReceivableTaxType,omitempty" xml:"AccountsReceivableTaxType,omitempty"`
 
-	// Default tax type used for contact on AP invoices
+	// Default tax type used for contact on AP Contacts
 	AccountsPayableTaxType string `json:"AccountsPayableTaxType,omitempty" xml:"AccountsPayableTaxType,omitempty"`
 
 	// Store certain address types for a contact – see address types
@@ -50,13 +62,13 @@ type Contact struct {
 	// Store certain phone types for a contact – see phone types
 	Phones []Phone `json:"Phones,omitempty" xml:"Phones,omitempty"`
 
-	// true or false – Boolean that describes if a contact that has any AP invoices entered against them. Cannot be set via PUT or POST – it is automatically set when an accounts payable invoice is generated against this contact.
+	// true or false – Boolean that describes if a contact that has any AP Contacts entered against them. Cannot be set via PUT or POST – it is automatically set when an accounts payable Contact is generated against this contact.
 	IsSupplier bool `json:"IsSupplier,omitempty" xml:"IsSupplier,omitempty"`
 
-	// true or false – Boolean that describes if a contact has any AR invoices entered against them. Cannot be set via PUT or POST – it is automatically set when an accounts receivable invoice is generated against this contact.
+	// true or false – Boolean that describes if a contact has any AR Contacts entered against them. Cannot be set via PUT or POST – it is automatically set when an accounts receivable Contact is generated against this contact.
 	IsCustomer bool `json:"IsCustomer,omitempty" xml:"IsCustomer,omitempty"`
 
-	// Default currency for raising invoices against contact
+	// Default currency for raising Contacts against contact
 	DefaultCurrency string `json:"DefaultCurrency,omitempty" xml:"DefaultCurrency,omitempty"`
 
 	// Store XeroNetworkKey for contacts.
@@ -81,23 +93,195 @@ type Contact struct {
 	TrackingCategoryOption string `json:"TrackingCategoryOption,omitempty" xml:"TrackingCategoryOption,omitempty"`
 
 	// UTC timestamp of last update to contact
-	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"UpdatedDateUTC,omitempty"`
+	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
 
 	// Displays which contact groups a contact is included in
 	ContactGroups []ContactGroup `json:"ContactGroups,omitempty" xml:"ContactGroups,omitempty"`
 
 	// Website address for contact (read only)
-	Website string `json:"Website,omitempty" xml:"Website,omitempty"`
+	Website string `json:"Website,omitempty" xml:"-"`
 
 	// batch payment details for contact (read only)
-	BatchPayments BatchPayment `json:"BatchPayments,omitempty" xml:"BatchPayments,omitempty"`
+	BatchPayments BatchPayment `json:"BatchPayments,omitempty" xml:"-"`
 
 	// The default discount rate for the contact (read only)
-	Discount float32 `json:"Discount,omitempty" xml:"Discount,omitempty"`
+	Discount float32 `json:"Discount,omitempty" xml:"-"`
 
-	// The raw AccountsReceivable(sales invoices) and AccountsPayable(bills) outstanding and overdue amounts, not converted to base currency (read only)
-	Balances string `json:"Balances,omitempty" xml:"Balances,omitempty"`
+	// The raw AccountsReceivable(sales Contacts) and AccountsPayable(bills) outstanding and overdue amounts, not converted to base currency (read only)
+	Balances Balances `json:"Balances,omitempty" xml:"-"`
 
 	// A boolean to indicate if a contact has an attachment
 	HasAttachments bool `json:"HasAttachments,omitempty" xml:"HasAttachments,omitempty"`
+}
+
+//Contacts contains a collection of Contacts
+type Contacts struct {
+	Contacts []Contact `json:"Contacts" xml:"Contact"`
+}
+
+//Balances are the raw AccountsReceivable(sales invoices) and AccountsPayable(bills)
+//outstanding and overdue amounts, not converted to base currency
+type Balances struct {
+	AccountsReceivable Balance `json:"AccountsReceivable,omitempty" xml:"AccountsReceivable,omitempty"`
+	AccountsPayable    Balance `json:"AccountsPayable,omitempty" xml:"AccountsPayable,omitempty"`
+}
+
+//Balance is the raw AccountsReceivable(sales invoices) and AccountsPayable(bills)
+//outstanding and overdue amounts, not converted to base currency
+type Balance struct {
+	Outstanding float32 `json:"Oustanding,omitempty" xml:"Oustanding,omitempty"`
+	Overdue     float32 `json:"Overdue,omitempty" xml:"Overdue,omitempty"`
+}
+
+//The Xero API returns Dates based on the .Net JSON date format available at the time of development
+//We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
+func (c *Contacts) convertContactDates() error {
+	var err error
+	for n := len(c.Contacts) - 1; n >= 0; n-- {
+		c.Contacts[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(c.Contacts[n].UpdatedDateUTC, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func unmarshalContact(contactResponseBytes []byte) (*Contacts, error) {
+	var contactResponse *Contacts
+	err := json.Unmarshal(contactResponseBytes, &contactResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	err = contactResponse.convertContactDates()
+	if err != nil {
+		return nil, err
+	}
+
+	return contactResponse, err
+}
+
+//CreateContact will create Contacts given an Contacts struct
+func (c *Contacts) CreateContact(provider *xero.Provider, session goth.Session) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(c, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	contactResponseBytes, err := provider.Create(session, "Contacts", additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
+//UpdateContact will update a Contact given a Contacts struct
+//This will only handle single Contact - you cannot update multiple Contacts in a single call
+func (c *Contacts) UpdateContact(provider *xero.Provider, session goth.Session) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(c, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	contactResponseBytes, err := provider.Update(session, "Contacts/"+c.Contacts[0].ContactID, additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
+//FindAllContactsModifiedSince will get all Contacts modified after a specified date.
+//These Contacts will not have details like default account codes and tracking categories.
+//If you need details then use FindContactsByPage and get 100 Contacts at a time
+func FindAllContactsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	contactResponseBytes, err := provider.Find(session, "Contacts", additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
+//FindAllContacts will get all Contacts. These Contact will not have details like default accounts.
+//If you need details then use FindContactsByPage and get 100 Contacts at a time
+func FindAllContacts(provider *xero.Provider, session goth.Session) (*Contacts, error) {
+	return FindAllContactsModifiedSince(provider, session, dayZero)
+}
+
+//FindContact will get a single Contact - ContactID can be a GUID for an Contact or an Contact number
+func FindContact(provider *xero.Provider, session goth.Session, contactID string) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	contactResponseBytes, err := provider.Find(session, "Contacts/"+contactID, additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
+//FindContactsByPageModifiedSince will get a specified page of Contacts which contains 100 Contacts modified
+//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
+//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
+//you will only get summarised data e.g. no default accounts or tracking categories
+func FindContactsByPageModifiedSince(provider *xero.Provider, session goth.Session, page int, modifiedSince time.Time) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	contactResponseBytes, err := provider.Find(session, "Contacts?page="+strconv.Itoa(page), additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
+//FindContactsByPage will get a specified page of Contacts which contains 100 Contacts
+//Page 1 gives the first 100, page two the next 100 etc etc.
+//paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
+//you will only get summarised data e.g. no default accounts or tracking categories
+func FindContactsByPage(provider *xero.Provider, session goth.Session, page int) (*Contacts, error) {
+	return FindContactsByPageModifiedSince(provider, session, page, dayZero)
+}
+
+//CreateExampleContact Creates an Example contact
+func CreateExampleContact() *Contacts {
+	contact := Contact{
+		Name: "Cosmo Kramer",
+	}
+
+	contactCollection := &Contacts{
+		Contacts: []Contact{},
+	}
+
+	contactCollection.Contacts = append(contactCollection.Contacts, contact)
+
+	return contactCollection
 }
