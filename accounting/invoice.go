@@ -72,40 +72,40 @@ type Invoice struct {
 	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// Total of discounts applied on the invoice line items
-	TotalDiscount float32 `json:"TotalDiscount,omitempty" xml:"TotalDiscount,omitempty"`
+	TotalDiscount float32 `json:"TotalDiscount,omitempty" xml:"-"`
 
 	// Xero generated unique identifier for invoice
 	InvoiceID string `json:"InvoiceID,omitempty" xml:"InvoiceID,omitempty"`
 
 	// boolean to indicate if an invoice has an attachment
-	HasAttachments bool `json:"HasAttachments,omitempty" xml:"HasAttachments,omitempty"`
+	HasAttachments bool `json:"HasAttachments,omitempty" xml:"-"`
 
 	// See Payments
-	Payments []Payment `json:"Payments,omitempty" xml:"Payments,omitempty"`
+	Payments *[]Payment `json:"Payments,omitempty" xml:"-"`
 
 	// See Prepayments
-	Prepayments []Prepayment `json:"Prepayments,omitempty" xml:"Prepayments,omitempty"`
+	Prepayments *[]Prepayment `json:"Prepayments,omitempty" xml:"-"`
 
 	// See Overpayments
-	Overpayments []Overpayment `json:"Overpayments,omitempty" xml:"Overpayments,omitempty"`
+	Overpayments *[]Overpayment `json:"Overpayments,omitempty" xml:"-"`
 
 	// Amount remaining to be paid on invoice
-	AmountDue float32 `json:"AmountDue,omitempty" xml:"AmountDue,omitempty"`
+	AmountDue float32 `json:"AmountDue,omitempty" xml:"-"`
 
 	// Sum of payments received for invoice
-	AmountPaid float32 `json:"AmountPaid,omitempty" xml:"AmountPaid,omitempty"`
+	AmountPaid float32 `json:"AmountPaid,omitempty" xml:"-"`
 
 	// The date the invoice was fully paid. Only returned on fully paid invoices
-	FullyPaidOnDate string `json:"FullyPaidOnDate,omitempty" xml:"FullyPaidOnDate,omitempty"`
+	FullyPaidOnDate string `json:"FullyPaidOnDate,omitempty" xml:"-"`
 
 	// Sum of all credit notes, over-payments and pre-payments applied to invoice
-	AmountCredited float32 `json:"AmountCredited,omitempty" xml:"AmountCredited,omitempty"`
+	AmountCredited float32 `json:"AmountCredited,omitempty" xml:"-"`
 
 	// Last modified date UTC format
-	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"UpdatedDateUTC,omitempty"`
+	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
 
 	// Details of credit notes that have been applied to an invoice
-	CreditNotes []CreditNote `json:"CreditNotes,omitempty" xml:"CreditNotes,omitempty"`
+	CreditNotes *[]CreditNote `json:"CreditNotes,omitempty" xml:"-"`
 }
 
 //Invoices contains a collection of Invoices
@@ -174,53 +174,7 @@ func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) 
 		"Content-Type": "application/xml",
 	}
 
-	//If we send all details of an invoice to Xero then we'll get a 400 error because some elements
-	//are read only and cannot be updated.  So we need to strip out the read only elements here
-	lineItemsToAdd := []LineItem{}
-	for _, lineItem := range i.Invoices[0].LineItems {
-		lineItemToAdd := LineItem{
-			LineItemID:  lineItem.LineItemID,
-			ItemCode:    lineItem.ItemCode,
-			Description: lineItem.Description,
-			Quantity:    lineItem.Quantity,
-			UnitAmount:  lineItem.UnitAmount,
-			TaxType:     lineItem.TaxType,
-			TaxAmount:   lineItem.TaxAmount,
-			LineAmount:  lineItem.LineAmount,
-			AccountCode: lineItem.AccountCode,
-			Tracking:    lineItem.Tracking,
-		}
-		lineItemsToAdd = append(lineItemsToAdd, lineItemToAdd)
-	}
-
-	invoice := Invoice{
-		Type: i.Invoices[0].Type,
-		Contact: Contact{
-			ContactID: i.Invoices[0].Contact.ContactID,
-		},
-		Date:                i.Invoices[0].Date,
-		DueDate:             i.Invoices[0].DueDate,
-		ExpectedPaymentDate: i.Invoices[0].ExpectedPaymentDate,
-		InvoiceNumber:       i.Invoices[0].InvoiceNumber,
-		Reference:           i.Invoices[0].Reference,
-		BrandingThemeID:     i.Invoices[0].BrandingThemeID,
-		URL:                 i.Invoices[0].URL,
-		CurrencyCode:        i.Invoices[0].CurrencyCode,
-		Status:              i.Invoices[0].Status,
-		LineAmountTypes:     i.Invoices[0].LineAmountTypes,
-		SubTotal:            i.Invoices[0].SubTotal,
-		TotalTax:            i.Invoices[0].TotalTax,
-		Total:               i.Invoices[0].Total,
-		LineItems:           lineItemsToAdd,
-	}
-
-	invoiceCollection := &Invoices{
-		Invoices: []Invoice{},
-	}
-
-	invoiceCollection.Invoices = append(invoiceCollection.Invoices, invoice)
-
-	body, err := xml.MarshalIndent(invoiceCollection, "  ", "	")
+	body, err := xml.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
