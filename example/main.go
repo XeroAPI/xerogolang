@@ -26,6 +26,7 @@ var (
 	contacts         = new(accounting.Contacts)
 	accounts         = new(accounting.Accounts)
 	bankTransactions = new(accounting.BankTransactions)
+	creditNotes      = new(accounting.CreditNotes)
 )
 
 func init() {
@@ -121,6 +122,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		bankTransactions = bankTransactionCollection
 		t, _ := template.New("foo").Parse(bankTransactionTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions[0])
+	case "creditnote":
+		creditNotes = accounting.CreateExampleCreditNote()
+		creditNoteCollection, err := creditNotes.CreateCreditNote(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		creditNotes = creditNoteCollection
+		t, _ := template.New("foo").Parse(creditNoteTemplate)
+		t.Execute(res, creditNoteCollection.CreditNotes[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -183,6 +194,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(bankTransactionTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions[0])
+	case "creditnote":
+		creditNoteCollection, err := accounting.FindCreditNote(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		creditNotes = creditNoteCollection
+
+		t, _ := template.New("foo").Parse(creditNoteTemplate)
+		t.Execute(res, creditNoteCollection.CreditNotes[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -214,7 +235,7 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
-				fmt.Fprintln(res, err)
+				fmt.Fprintln(res, parseError)
 				return
 			}
 			invoiceCollection, err = accounting.FindAllInvoicesModifiedSince(provider, session, parsedTime)
@@ -271,7 +292,7 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
-				fmt.Fprintln(res, err)
+				fmt.Fprintln(res, parseError)
 				return
 			}
 			bankTransactionCollection, err = accounting.FindAllBankTransactionsModifiedSince(provider, session, parsedTime)
@@ -282,6 +303,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(bankTransactionsTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions)
+	case "creditnotes":
+		creditNoteCollection := new(accounting.CreditNotes)
+		var err error
+		if modifiedSince == "" {
+			creditNoteCollection, err = accounting.FindAllCreditNotes(provider, session)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			creditNoteCollection, err = accounting.FindAllCreditNotesModifiedSince(provider, session, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(creditNotesTemplate)
+		t.Execute(res, creditNoteCollection.CreditNotes)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -368,6 +408,25 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(bankTransactionsTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions)
+	case "creditnotes":
+		creditNoteCollection := new(accounting.CreditNotes)
+		var err error
+		if modifiedSince == "" {
+			creditNoteCollection, err = accounting.FindCreditNotesByPage(provider, session, pageInt)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			creditNoteCollection, err = accounting.FindCreditNotesByPageModifiedSince(provider, session, pageInt, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(creditNotesTemplate)
+		t.Execute(res, creditNoteCollection.CreditNotes)
 	default:
 		fmt.Fprintln(res, "Paging not supported on object specified")
 		return
@@ -458,6 +517,24 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(bankTransactionTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions[0])
+	case "creditnote":
+		if id != creditNotes.CreditNotes[0].CreditNoteID {
+			fmt.Fprintln(res, "Could not update CreditNote")
+			return
+		}
+		if creditNotes.CreditNotes[0].Status == "DRAFT" {
+			creditNotes.CreditNotes[0].Status = "SUBMITTED"
+		} else if creditNotes.CreditNotes[0].Status == "SUBMITTED" {
+			creditNotes.CreditNotes[0].Status = "DRAFT"
+		}
+
+		creditNoteCollection, err := creditNotes.UpdateCreditNote(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(creditNoteTemplate)
+		t.Execute(res, creditNoteCollection.CreditNotes[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -518,6 +595,10 @@ var indexConnectedTemplate = `
 <p><a href="/findall/banktransactions?provider=xero">find all bank transactions</a></p>
 <p><a href="/findall/banktransactions?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transactions changed since 1 May 2017</a></p>
 <p><a href="/findall/banktransactions/1?provider=xero">find the first 100 bank transactions</a></p>
+<p><a href="/create/creditnote?provider=xero">create credit note</a></p>
+<p><a href="/findall/creditnotes?provider=xero">find all credit notes</a></p>
+<p><a href="/findall/creditnotes?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all credit notes changed since 1 May 2017</a></p>
+<p><a href="/findall/creditnotes/1?provider=xero">find the first 100 credit notes</a></p>
 `
 
 var userTemplate = `
@@ -542,6 +623,10 @@ var userTemplate = `
 <p><a href="/findall/banktransactions?provider=xero">find all bank transactions</a></p>
 <p><a href="/findall/banktransactions?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transactions changed since 1 May 2017</a></p>
 <p><a href="/findall/banktransactions/1?provider=xero">find the first 100 bank transactions</a></p>
+<p><a href="/create/creditnote?provider=xero">create credit note</a></p>
+<p><a href="/findall/creditnotes?provider=xero">find all credit notes</a></p>
+<p><a href="/findall/creditnotes?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all credit notes changed since 1 May 2017</a></p>
+<p><a href="/findall/creditnotes/1?provider=xero">find the first 100 credit notes</a></p>
 `
 
 var invoiceTemplate = `
@@ -678,6 +763,40 @@ var bankTransactionsTemplate = `
 <p>Total: {{.Total}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/banktransaction/{{.BankTransactionID}}?provider=xero">See details of this bank transaction</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+var creditNoteTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.CreditNoteID}}</p>
+<p>CreditNote Number: {{.CreditNoteNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .LineItems}}
+<p>LineItems: </p>
+{{range .LineItems}}
+	<p>--  Description:{{.Description}}  |  Quantity:{{.Quantity}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/creditnote/{{.CreditNoteID}}?provider=xero">update status of this credit note</a></p>
+`
+
+var creditNotesTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.CreditNoteID}}</p>
+<p>CreditNote Number: {{.CreditNoteNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/creditnote/{{.CreditNoteID}}?provider=xero">See details of this credit note</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
