@@ -27,6 +27,7 @@ var (
 	accounts         = new(accounting.Accounts)
 	bankTransactions = new(accounting.BankTransactions)
 	creditNotes      = new(accounting.CreditNotes)
+	contactGroups    = new(accounting.ContactGroups)
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 	gothic.Store = store
 }
 
+//indexHandler dictates what is processed on the index route
 func indexHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
 	if err != nil || session == nil {
@@ -53,6 +55,7 @@ func indexHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//authHandler dictates what is processed on the auth route
 func authHandler(res http.ResponseWriter, req *http.Request) {
 	// try to get the user without re-authenticating
 	if gothUser, err := gothic.CompleteUserAuth(res, req); err == nil {
@@ -63,6 +66,7 @@ func authHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//callbackHandler dictates what is processed on the auth/callback route
 func callbackHandler(res http.ResponseWriter, req *http.Request) {
 	user, err := gothic.CompleteUserAuth(res, req)
 	if err != nil {
@@ -73,6 +77,7 @@ func callbackHandler(res http.ResponseWriter, req *http.Request) {
 	t.Execute(res, user)
 }
 
+//createHandler dictates what is processed on the create route
 func createHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
 	if err != nil {
@@ -132,18 +137,30 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		creditNotes = creditNoteCollection
 		t, _ := template.New("foo").Parse(creditNoteTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes[0])
+	case "contactgroup":
+		contactGroups = accounting.CreateExampleContactGroup()
+		contactGroupCollection, err := contactGroups.CreateContactGroup(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		contactGroups = contactGroupCollection
+		t, _ := template.New("foo").Parse(contactGroupTemplate)
+		t.Execute(res, contactGroupCollection.ContactGroups[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
 	}
 }
 
+//disconnectHandler dictates what is processed on the disconnect route
 func disconnectHandler(res http.ResponseWriter, req *http.Request) {
 	gothic.Logout(res, req)
 	res.Header().Set("Location", "/")
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+//findHandler dictates what is processed on the find route
 func findHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
 	if err != nil {
@@ -204,12 +221,23 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(creditNoteTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes[0])
+	case "contactgroup":
+		contactGroupCollection, err := accounting.FindContactGroup(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		contactGroups = contactGroupCollection
+
+		t, _ := template.New("foo").Parse(contactGroupTemplate)
+		t.Execute(res, contactGroupCollection.ContactGroups[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
 	}
 }
 
+//findAllHandler dictates what is processed on the findall route
 func findAllHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
 	if err != nil {
@@ -322,12 +350,21 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(creditNotesTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes)
+	case "contactgroups":
+		contactGroupCollection, err := accounting.FindAllContactGroups(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(contactGroupsTemplate)
+		t.Execute(res, contactGroupCollection.ContactGroups)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
 	}
 }
 
+//findAllPagedHandler dictates what is processed on the findall/{object}/{page} route
 func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
 	if err != nil {
@@ -433,6 +470,7 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//updateHandler dictates what is processed on the update route
 func updateHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
 	if err != nil {
@@ -535,6 +573,22 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(creditNoteTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes[0])
+	case "contactgroup":
+		if id != contactGroups.ContactGroups[0].ContactGroupID {
+			fmt.Fprintln(res, "Could not update ContactGroup")
+			return
+		}
+		if contactGroups.ContactGroups[0].Status == "ACTIVE" {
+			contactGroups.ContactGroups[0].Status = "DELETED"
+		}
+
+		contactGroupCollection, err := contactGroups.UpdateContactGroup(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(contactGroupTemplate)
+		t.Execute(res, contactGroupCollection.ContactGroups[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -599,6 +653,8 @@ var indexConnectedTemplate = `
 <p><a href="/findall/creditnotes?provider=xero">find all credit notes</a></p>
 <p><a href="/findall/creditnotes?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all credit notes changed since 1 May 2017</a></p>
 <p><a href="/findall/creditnotes/1?provider=xero">find the first 100 credit notes</a></p>
+<p><a href="/create/contactgroup?provider=xero">create contact group</a></p>
+<p><a href="/findall/contactgroups?provider=xero">find all contact groups</a></p>
 `
 
 var userTemplate = `
@@ -627,6 +683,8 @@ var userTemplate = `
 <p><a href="/findall/creditnotes?provider=xero">find all credit notes</a></p>
 <p><a href="/findall/creditnotes?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all credit notes changed since 1 May 2017</a></p>
 <p><a href="/findall/creditnotes/1?provider=xero">find the first 100 credit notes</a></p>
+<p><a href="/create/contactgroup?provider=xero">create contact group</a></p>
+<p><a href="/findall/contactgroups?provider=xero">find all contact groups</a></p>
 `
 
 var invoiceTemplate = `
@@ -713,7 +771,7 @@ var accountTemplate = `
 <p>Tax Type: {{.TaxType}}</p>
 <p>Enable payments: {{.EnablePaymentsToAccount}}</p>
 <p>Show In Expense Claims: {{.ShowInExpenseClaims}}</p>
-<p><a href="/update/account/{{.AccountID}}?provider=xero">Upadte enable payments this account</a></p>
+<p><a href="/update/account/{{.AccountID}}?provider=xero">Update enable payments this account</a></p>
 `
 
 var accountsTemplate = `
@@ -797,6 +855,33 @@ var creditNotesTemplate = `
 <p>Total: {{.Total}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/creditnote/{{.CreditNoteID}}?provider=xero">See details of this credit note</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var contactGroupTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.ContactGroupID}}</p>
+<p>Name: {{.Name}}</p>
+<p>Status: {{.Status}}</p>
+{{if .Contacts}}
+<p>Contacts: </p>
+{{range .Contacts}}
+     <p>--  ID: {{.ContactID}}  |  Name: {{.Name}}</p>
+{{end}}
+{{else}}
+     <p>No contacts were found</p>
+{{end}}
+<p><a href="/update/contactgroup/{{.ContactGroupID}}?provider=xero">Delete this contact group</a></p>
+`
+
+var contactGroupsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.ContactGroupID}}</p>
+<p>Name: {{.Name}}</p>
+<p>Status: {{.Status}}</p>
+<p><a href="/find/contactgroup/{{.ContactGroupID}}?provider=xero">See details of this contact group</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `

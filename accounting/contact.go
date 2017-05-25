@@ -271,6 +271,49 @@ func FindContactsByPage(provider *xero.Provider, session goth.Session, page int)
 	return FindContactsByPageModifiedSince(provider, session, page, dayZero)
 }
 
+//AddContactToContactGroup will add a collection of Contacts to a supplied contactGroupID
+func (c *Contacts) AddContactToContactGroup(provider *xero.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	//We only want to send ContactID's or the endpoint will return a 400 so we need to strip out all the other contact info
+	contactsToAdd := []Contact{}
+	for _, contact := range c.Contacts {
+		contactToAdd := Contact{
+			ContactID: contact.ContactID,
+		}
+		contactsToAdd = append(contactsToAdd, contactToAdd)
+	}
+
+	body, err := xml.MarshalIndent(contactsToAdd, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	contactResponseBytes, err := provider.Update(session, "ContactGroups/"+contactGroupID+"/Contacts", additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
+//RemoveContactFromContactGroup will remove a Contact from a supplied contactGroupID - must be done one at a time.
+func (c *Contacts) RemoveContactFromContactGroup(provider *xero.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	contactResponseBytes, err := provider.Remove(session, "ContactGroups/"+contactGroupID+"/Contacts/"+c.Contacts[0].ContactID, additionalHeaders)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalContact(contactResponseBytes)
+}
+
 //CreateExampleContact Creates an Example contact
 func CreateExampleContact() *Contacts {
 	contact := Contact{
