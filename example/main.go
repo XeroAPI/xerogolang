@@ -28,6 +28,7 @@ var (
 	bankTransactions = new(accounting.BankTransactions)
 	creditNotes      = new(accounting.CreditNotes)
 	contactGroups    = new(accounting.ContactGroups)
+	currencies       = new(accounting.Currencies)
 )
 
 func init() {
@@ -358,6 +359,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(contactGroupsTemplate)
 		t.Execute(res, contactGroupCollection.ContactGroups)
+	case "currencies":
+		currencyCollection, err := accounting.FindAllCurrencies(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(currenciesTemplate)
+		t.Execute(res, currencyCollection.Currencies)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -655,6 +664,7 @@ var indexConnectedTemplate = `
 <p><a href="/findall/creditnotes/1?provider=xero">find the first 100 credit notes</a></p>
 <p><a href="/create/contactgroup?provider=xero">create contact group</a></p>
 <p><a href="/findall/contactgroups?provider=xero">find all contact groups</a></p>
+<p><a href="/findall/currencies?provider=xero">find all currencies</a></p>
 `
 
 var userTemplate = `
@@ -685,6 +695,7 @@ var userTemplate = `
 <p><a href="/findall/creditnotes/1?provider=xero">find the first 100 credit notes</a></p>
 <p><a href="/create/contactgroup?provider=xero">create contact group</a></p>
 <p><a href="/findall/contactgroups?provider=xero">find all contact groups</a></p>
+<p><a href="/findall/currencies?provider=xero">find all currencies</a></p>
 `
 
 var invoiceTemplate = `
@@ -882,6 +893,15 @@ var contactGroupsTemplate = `
 <p>Name: {{.Name}}</p>
 <p>Status: {{.Status}}</p>
 <p><a href="/find/contactgroup/{{.ContactGroupID}}?provider=xero">See details of this contact group</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var currenciesTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>Code: {{.Code}}</p>
+<p>Description: {{.Description}}</p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
