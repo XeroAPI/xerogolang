@@ -479,6 +479,86 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//findWhereHandler dictates what is processed on the findwhere route
+func findWhereHandler(res http.ResponseWriter, req *http.Request) {
+	session, err := provider.GetSessionFromStore(req, res)
+	if err != nil {
+		fmt.Fprintln(res, err)
+		return
+	}
+
+	vars := mux.Vars(req)
+	object := vars["object"]
+
+	whereClause := req.URL.Query().Get("where")
+	whereClause, err = url.QueryUnescape(whereClause)
+	if err != nil {
+		fmt.Fprintln(res, err)
+		return
+	}
+	switch object {
+	case "invoices":
+		invoiceCollection := new(accounting.Invoices)
+		var err error
+		if whereClause == "" {
+			invoiceCollection, err = accounting.FindInvoices(provider, session)
+		} else {
+			invoiceCollection, err = accounting.FindInvoicesWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(invoicesTemplate)
+		t.Execute(res, invoiceCollection.Invoices)
+	case "contacts":
+		contactCollection := new(accounting.Contacts)
+		var err error
+		if whereClause == "" {
+			contactCollection, err = accounting.FindContacts(provider, session)
+		} else {
+			contactCollection, err = accounting.FindContactsWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(contactsTemplate)
+		t.Execute(res, contactCollection.Contacts)
+	case "banktransactions":
+		bankTransactionCollection := new(accounting.BankTransactions)
+		var err error
+		if whereClause == "" {
+			bankTransactionCollection, err = accounting.FindBankTransactions(provider, session)
+		} else {
+			bankTransactionCollection, err = accounting.FindBankTransactionsWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(bankTransactionsTemplate)
+		t.Execute(res, bankTransactionCollection.BankTransactions)
+	case "creditnotes":
+		creditNoteCollection := new(accounting.CreditNotes)
+		var err error
+		if whereClause == "" {
+			creditNoteCollection, err = accounting.FindCreditNotes(provider, session)
+		} else {
+			creditNoteCollection, err = accounting.FindCreditNotesWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(creditNotesTemplate)
+		t.Execute(res, creditNoteCollection.CreditNotes)
+	default:
+		fmt.Fprintln(res, "Where clauses not available on this entity")
+		return
+	}
+}
+
 //updateHandler dictates what is processed on the update route
 func updateHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
@@ -625,6 +705,9 @@ func main() {
 	fa.HandleFunc("/{object}", findAllHandler).Methods("GET")
 	// "/findall/{object}/{page}"
 	fa.HandleFunc("/{object}/{page}", findAllPagedHandler).Methods("GET")
+	fw := r.PathPrefix("/findwhere").Subrouter()
+	// "/findwhere/{object}"
+	fw.HandleFunc("/{object}", findWhereHandler).Methods("GET")
 	u := r.PathPrefix("/update").Subrouter()
 	// "/update/{object}/id"
 	u.HandleFunc("/{object}/{id}", updateHandler).Methods("GET")
@@ -753,6 +836,7 @@ var contactTemplate = `
 <p>TrackingCategoryOption: {{.TrackingCategoryOption}}</p>
 <p>Amount overdue: {{.Balances.AccountsReceivable.Overdue}}</p>
 <p><a href="/update/contact/{{.ContactID}}?provider=xero">update email address of this contact</a></p>
+<p><a href="/findwhere/invoices?provider=xero&where=Contact.ContactID%20%3D%20Guid%28%22{{.ContactID}}%22%29%0D%0A">see invoices for this contact</a></p>
 `
 
 var contactsTemplate = `
