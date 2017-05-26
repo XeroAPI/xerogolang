@@ -10,7 +10,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/TheRegan/Xero-Golang/helpers"
@@ -211,8 +213,18 @@ func (p *Provider) ProcessRequest(request *http.Request, session goth.Session, a
 }
 
 //Find retrieves the requested data from an endpoint to be unmarshaled into the appropriate data type
-func (p *Provider) Find(session goth.Session, endpoint string, additionalHeaders map[string]string) ([]byte, error) {
-	request, err := http.NewRequest("GET", endpointProfile+endpoint, nil)
+func (p *Provider) Find(session goth.Session, endpoint string, additionalHeaders map[string]string, querystringParameters map[string]string) ([]byte, error) {
+	var querystring string
+	if querystringParameters != nil {
+		for key, value := range querystringParameters {
+			escapedValue := url.QueryEscape(value)
+			querystring = querystring + "&" + key + "=" + escapedValue
+		}
+		querystring = strings.TrimPrefix(querystring, "&")
+		querystring = "?" + querystring
+	}
+
+	request, err := http.NewRequest("GET", endpointProfile+endpoint+querystring, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +299,7 @@ func (p *Provider) FetchUser(session goth.Session) (goth.User, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
-	responseBytes, err := p.Find(sess, "Organisation", additionalHeaders)
+	responseBytes, err := p.Find(sess, "Organisation", additionalHeaders, nil)
 	if err != nil {
 		return user, err
 	}

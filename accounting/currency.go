@@ -32,13 +32,13 @@ func unmarshalCurrencies(currencyResponseBytes []byte) (*Currencies, error) {
 	return currencyResponse, err
 }
 
-//FindAllCurrencies will get all currencies
-func FindAllCurrencies(provider *xero.Provider, session goth.Session) (*Currencies, error) {
+//FindCurrencies will get all currencies
+func FindCurrencies(provider *xero.Provider, session goth.Session) (*Currencies, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
 
-	currencyResponseBytes, err := provider.Find(session, "Currencies", additionalHeaders)
+	currencyResponseBytes, err := provider.Find(session, "Currencies", additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}

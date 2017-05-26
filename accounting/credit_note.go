@@ -157,10 +157,11 @@ func (c *CreditNotes) UpdateCreditNote(provider *xero.Provider, session goth.Ses
 	return unmarshalCreditNote(creditNoteResponseBytes)
 }
 
-//FindAllCreditNotesModifiedSince will get all creditNotes modified after a specified date.
-//These creditNote will not have details like line items.
-//If you need details then use FindCreditNotesByPage and get 100 creditNotes at a time
-func FindAllCreditNotesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*CreditNotes, error) {
+//FindCreditNotesModifiedSinceWithParams will get all Credit Notes modified after a specified date.
+//These Credit Notes will not have details like default account codes and tracking categories.
+//If you need details then use FindCreditNotesByPage and get 100 Credit Notes at a time
+//additional querystringParameters such as where, page, order can be added as a map
+func FindCreditNotesModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -169,7 +170,7 @@ func FindAllCreditNotesModifiedSince(provider *xero.Provider, session goth.Sessi
 		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
 	}
 
-	creditNoteResponseBytes, err := provider.Find(session, "CreditNotes", additionalHeaders)
+	creditNoteResponseBytes, err := provider.Find(session, "CreditNotes", additionalHeaders, querystringParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -177,10 +178,121 @@ func FindAllCreditNotesModifiedSince(provider *xero.Provider, session goth.Sessi
 	return unmarshalCreditNote(creditNoteResponseBytes)
 }
 
-//FindAllCreditNotes will get all creditNotes. These creditNote will not have details like line items.
-//If you need details then use FindCreditNotesByPage and get 100 creditNotes at a time
-func FindAllCreditNotes(provider *xero.Provider, session goth.Session) (*CreditNotes, error) {
-	return FindAllCreditNotesModifiedSince(provider, session, dayZero)
+//FindCreditNotesModifiedSince will get all Credit Notes modified after a specified date.
+//These Credit Notes will not have details like default account codes and tracking categories.
+//If you need details then use FindCreditNotesByPage and get 100 CreditNotes at a time
+func FindCreditNotesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*CreditNotes, error) {
+	return FindCreditNotesModifiedSinceWithParams(provider, session, modifiedSince, nil)
+}
+
+//FindCreditNotesModifiedSinceByPage will get a specified page of Credit Notes which contains 100 Credit Notes modified
+//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
+//Paged Credit Notes contain all the detail of the Credit Notes whereas if you use FindAllCreditNotes
+//you will only get summarised data e.g. no line items or tracking categories
+func FindCreditNotesModifiedSinceByPage(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"page": strconv.Itoa(page),
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
+}
+
+//FindCreditNotesModifiedSinceWhere will get Credit Notes which contains 100 Credit Notes
+//that fit the criteria of a supplied where clause.
+//you will only get summarised data e.g. no line items or tracking categories
+//If you need details then use FindCreditNotesByPage and get 100 Credit Notes at a time
+func FindCreditNotesModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"where": whereClause,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
+}
+
+//FindCreditNotesModifiedSinceOrderedBy will get Credit Notes and are order them by a supplied named element.
+//you will only get summarised data e.g. no line items or tracking categories
+//If you need details then use FindCreditNotesByPage and get 100 Credit Notes at a time
+func FindCreditNotesModifiedSinceOrderedBy(provider *xero.Provider, session goth.Session, modifiedSince time.Time, orderBy string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"order": orderBy,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
+}
+
+//FindCreditNotesByPage will get a specified page of Credit Notes which contains 100 Credit Notes
+//Page 1 gives the first 100, page two the next 100 etc etc.
+//paged Credit Notes contain all the detail of the Credit Notes whereas if you use FindAllCreditNotes
+//you will only get summarised data e.g. no line items or tracking categories
+func FindCreditNotesByPage(provider *xero.Provider, session goth.Session, page int) (*CreditNotes, error) {
+	return FindCreditNotesModifiedSinceByPage(provider, session, dayZero, page)
+}
+
+//FindCreditNotesByPageWhere will get a specified page of Credit Notes which contains 100 Credit Notes
+//that fit the criteria of a supplied where clause. Page 1 gives the first 100, page 2 the next 100 etc etc.
+//paged Credit Notes contain all the detail of the Credit Notes whereas if you use FindAllCreditNotes
+//you will only get summarised data e.g. no line items or tracking categories
+func FindCreditNotesByPageWhere(provider *xero.Provider, session goth.Session, page int, whereClause string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"page":  strconv.Itoa(page),
+		"where": whereClause,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindCreditNotesByPageWhereOrderedBy will get a specified page of Credit Notes which contains 100 Credit Notes
+//that fit the criteria of a supplied where clause and are ordered by a supplied named element.
+//Page 1 gives the first 100, page 2 the next 100 etc etc.
+//paged Credit Notes contain all the detail of the Credit Notes whereas if you use FindCreditNotes
+//you will only get summarised data e.g. no line items or tracking categories
+func FindCreditNotesByPageWhereOrderedBy(provider *xero.Provider, session goth.Session, page int, whereClause string, orderBy string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"page":  strconv.Itoa(page),
+		"where": whereClause,
+		"order": orderBy,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindCreditNotesOrderedBy will get all Credit Notes ordered by a supplied named element.
+//These Credit Notes will not have details like line items.
+//If you need details then use FindCreditNotesByPage and get 100 CreditNotes at a time
+func FindCreditNotesOrderedBy(provider *xero.Provider, session goth.Session, orderBy string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"order": orderBy,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindCreditNotesWhere will get all Credit Notes that fit the criteria of a supplied where clause.
+//These Credit Notes will not have details like line items.
+//If you need details then use FindCreditNotesByPage and get 100 CreditNotes at a time
+func FindCreditNotesWhere(provider *xero.Provider, session goth.Session, whereClause string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"where": whereClause,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindCreditNotesWhereOrderedBy will get all Credit Notes that fit the criteria of a supplied where clause
+//and are ordered by a supplied named element. These Credit Notes will not have details like line items.
+//If you need details then use FindCreditNotesByPage and get 100 CreditNotes at a time
+func FindCreditNotesWhereOrderedBy(provider *xero.Provider, session goth.Session, whereClause string, orderedBy string) (*CreditNotes, error) {
+	querystringParameters := map[string]string{
+		"where": whereClause,
+		"order": orderedBy,
+	}
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindCreditNotesWithParams will get all Credit Notes. These Credit Notes will not have details like line items.
+//If you need details then use FindCreditNotesByPage and get 100 CreditNotes at a time
+//additional querystringParameters such as where, page, order can be added as a map
+func FindCreditNotesWithParams(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*CreditNotes, error) {
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindCreditNotes will get all CreditNotes. These Credit Notes will not have details like line items.
+//If you need details then use FindCreditNotesByPage and get 100 CreditNotes at a time
+func FindCreditNotes(provider *xero.Provider, session goth.Session) (*CreditNotes, error) {
+	return FindCreditNotesModifiedSinceWithParams(provider, session, dayZero, nil)
 }
 
 //FindCreditNote will get a single creditNote - creditNoteID can be a GUID for an creditNote or an creditNote number
@@ -189,40 +301,12 @@ func FindCreditNote(provider *xero.Provider, session goth.Session, creditNoteID 
 		"Accept": "application/json",
 	}
 
-	creditNoteResponseBytes, err := provider.Find(session, "CreditNotes/"+creditNoteID, additionalHeaders)
+	creditNoteResponseBytes, err := provider.Find(session, "CreditNotes/"+creditNoteID, additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return unmarshalCreditNote(creditNoteResponseBytes)
-}
-
-//FindCreditNotesByPageModifiedSince will get a specified page of creditNotes which contains 100 creditNotes modified
-//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged creditNotes contain all the detail of the creditNotes whereas if you use FindAllCreditNotes
-//you will only get summarised data e.g. no line items
-func FindCreditNotesByPageModifiedSince(provider *xero.Provider, session goth.Session, page int, modifiedSince time.Time) (*CreditNotes, error) {
-	additionalHeaders := map[string]string{
-		"Accept": "application/json",
-	}
-	if !modifiedSince.Equal(dayZero) {
-		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
-	}
-
-	creditNoteResponseBytes, err := provider.Find(session, "CreditNotes?page="+strconv.Itoa(page), additionalHeaders)
-	if err != nil {
-		return nil, err
-	}
-
-	return unmarshalCreditNote(creditNoteResponseBytes)
-}
-
-//FindCreditNotesByPage will get a specified page of creditNotes which contains 100 creditNotes
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//paged creditNotes contain all the detail of the creditNotes whereas if you use FindAllCreditNotes
-//you will only get summarised data e.g. no line items
-func FindCreditNotesByPage(provider *xero.Provider, session goth.Session, page int) (*CreditNotes, error) {
-	return FindCreditNotesByPageModifiedSince(provider, session, page, dayZero)
 }
 
 //CreateExampleCreditNote Creates an Example creditNote

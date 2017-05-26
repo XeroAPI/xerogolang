@@ -80,13 +80,13 @@ func (c *ContactGroups) UpdateContactGroup(provider *xero.Provider, session goth
 	return unmarshalContactGroup(contactGroupResponseBytes)
 }
 
-//FindAllContactGroups will get all contactGroups
-func FindAllContactGroups(provider *xero.Provider, session goth.Session) (*ContactGroups, error) {
+//FindContactGroups will get all contactGroups
+func FindContactGroups(provider *xero.Provider, session goth.Session) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
 
-	contactGroupResponseBytes, err := provider.Find(session, "ContactGroups", additionalHeaders)
+	contactGroupResponseBytes, err := provider.Find(session, "ContactGroups", additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func FindContactGroup(provider *xero.Provider, session goth.Session, contactGrou
 		"Accept": "application/json",
 	}
 
-	contactGroupResponseBytes, err := provider.Find(session, "ContactGroups/"+contactGroupID, additionalHeaders)
+	contactGroupResponseBytes, err := provider.Find(session, "ContactGroups/"+contactGroupID, additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}

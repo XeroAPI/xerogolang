@@ -107,7 +107,7 @@ func FindOrganisation(provider *xero.Provider, session goth.Session) (*Organisat
 		"Accept": "application/json",
 	}
 
-	organisationResponseBytes, err := provider.Find(session, "Organisation", additionalHeaders)
+	organisationResponseBytes, err := provider.Find(session, "Organisation", additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}

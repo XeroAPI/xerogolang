@@ -144,10 +144,11 @@ func (a *Accounts) UpdateAccount(provider *xero.Provider, session goth.Session) 
 	return unmarshalAccount(accountResponseBytes)
 }
 
-//FindAllAccountsModifiedSince will get all accounts modified after a specified date.
+//FindAccountsModifiedSinceWithParams will get all accounts modified after a specified date.
 //These account will not have details like line items.
 //If you need details then use FindAccountsByPage and get 100 accounts at a time
-func FindAllAccountsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Accounts, error) {
+//additional querystringParameters such as where, page, order can be added as a map
+func FindAccountsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Accounts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -156,7 +157,7 @@ func FindAllAccountsModifiedSince(provider *xero.Provider, session goth.Session,
 		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
 	}
 
-	accountResponseBytes, err := provider.Find(session, "Accounts", additionalHeaders)
+	accountResponseBytes, err := provider.Find(session, "Accounts", additionalHeaders, querystringParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -164,10 +165,17 @@ func FindAllAccountsModifiedSince(provider *xero.Provider, session goth.Session,
 	return unmarshalAccount(accountResponseBytes)
 }
 
-//FindAllAccounts will get all accounts. These account will not have details like line items.
+//FindAccountsModifiedSince will get all accounts modified after a specified date.
+//These account will not have details like line items.
 //If you need details then use FindAccountsByPage and get 100 accounts at a time
-func FindAllAccounts(provider *xero.Provider, session goth.Session) (*Accounts, error) {
-	return FindAllAccountsModifiedSince(provider, session, dayZero)
+func FindAccountsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Accounts, error) {
+	return FindAccountsModifiedSinceWithParams(provider, session, modifiedSince, nil)
+}
+
+//FindAccounts will get all accounts. These account will not have details like line items.
+//If you need details then use FindAccountsByPage and get 100 accounts at a time
+func FindAccounts(provider *xero.Provider, session goth.Session) (*Accounts, error) {
+	return FindAccountsModifiedSinceWithParams(provider, session, dayZero, nil)
 }
 
 //FindAccount will get a single account - accountID must be a GUID for an account
@@ -176,7 +184,7 @@ func FindAccount(provider *xero.Provider, session goth.Session, accountID string
 		"Accept": "application/json",
 	}
 
-	accountResponseBytes, err := provider.Find(session, "Accounts/"+accountID, additionalHeaders)
+	accountResponseBytes, err := provider.Find(session, "Accounts/"+accountID, additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -189,19 +197,11 @@ func FindAccount(provider *xero.Provider, session goth.Session, accountID string
 //Paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
 //you will only get summarised data e.g. no line items
 func FindAccountsByPageModifiedSince(provider *xero.Provider, session goth.Session, page int, modifiedSince time.Time) (*Accounts, error) {
-	additionalHeaders := map[string]string{
-		"Accept": "application/json",
-	}
-	if !modifiedSince.Equal(dayZero) {
-		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	querystringParameters := map[string]string{
+		"page": strconv.Itoa(page),
 	}
 
-	accountResponseBytes, err := provider.Find(session, "Accounts?page="+strconv.Itoa(page), additionalHeaders)
-	if err != nil {
-		return nil, err
-	}
-
-	return unmarshalAccount(accountResponseBytes)
+	return FindAccountsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
 }
 
 //FindAccountsByPage will get a specified page of accounts which contains 100 accounts

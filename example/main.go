@@ -260,14 +260,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		invoiceCollection := new(accounting.Invoices)
 		var err error
 		if modifiedSince == "" {
-			invoiceCollection, err = accounting.FindAllInvoices(provider, session)
+			invoiceCollection, err = accounting.FindInvoices(provider, session)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			invoiceCollection, err = accounting.FindAllInvoicesModifiedSince(provider, session, parsedTime)
+			invoiceCollection, err = accounting.FindInvoicesModifiedSince(provider, session, parsedTime)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -279,14 +279,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		contactCollection := new(accounting.Contacts)
 		var err error
 		if modifiedSince == "" {
-			contactCollection, err = accounting.FindAllContacts(provider, session)
+			contactCollection, err = accounting.FindContacts(provider, session)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			contactCollection, err = accounting.FindAllContactsModifiedSince(provider, session, parsedTime)
+			contactCollection, err = accounting.FindContactsModifiedSince(provider, session, parsedTime)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -298,14 +298,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		accountCollection := new(accounting.Accounts)
 		var err error
 		if modifiedSince == "" {
-			accountCollection, err = accounting.FindAllAccounts(provider, session)
+			accountCollection, err = accounting.FindAccounts(provider, session)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			accountCollection, err = accounting.FindAllAccountsModifiedSince(provider, session, parsedTime)
+			accountCollection, err = accounting.FindAccountsModifiedSince(provider, session, parsedTime)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -317,14 +317,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		bankTransactionCollection := new(accounting.BankTransactions)
 		var err error
 		if modifiedSince == "" {
-			bankTransactionCollection, err = accounting.FindAllBankTransactions(provider, session)
+			bankTransactionCollection, err = accounting.FindBankTransactions(provider, session)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			bankTransactionCollection, err = accounting.FindAllBankTransactionsModifiedSince(provider, session, parsedTime)
+			bankTransactionCollection, err = accounting.FindBankTransactionsModifiedSince(provider, session, parsedTime)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -336,14 +336,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		creditNoteCollection := new(accounting.CreditNotes)
 		var err error
 		if modifiedSince == "" {
-			creditNoteCollection, err = accounting.FindAllCreditNotes(provider, session)
+			creditNoteCollection, err = accounting.FindCreditNotes(provider, session)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			creditNoteCollection, err = accounting.FindAllCreditNotesModifiedSince(provider, session, parsedTime)
+			creditNoteCollection, err = accounting.FindCreditNotesModifiedSince(provider, session, parsedTime)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -352,7 +352,7 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(creditNotesTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes)
 	case "contactgroups":
-		contactGroupCollection, err := accounting.FindAllContactGroups(provider, session)
+		contactGroupCollection, err := accounting.FindContactGroups(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -360,7 +360,7 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(contactGroupsTemplate)
 		t.Execute(res, contactGroupCollection.ContactGroups)
 	case "currencies":
-		currencyCollection, err := accounting.FindAllCurrencies(provider, session)
+		currencyCollection, err := accounting.FindCurrencies(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -408,7 +408,7 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			invoiceCollection, err = accounting.FindInvoicesByPageModifiedSince(provider, session, pageInt, parsedTime)
+			invoiceCollection, err = accounting.FindInvoicesModifiedSinceByPage(provider, session, parsedTime, pageInt)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -427,7 +427,7 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 				fmt.Fprintln(res, err)
 				return
 			}
-			contactCollection, err = accounting.FindContactsByPageModifiedSince(provider, session, pageInt, parsedTime)
+			contactCollection, err = accounting.FindContactsModifiedSinceByPage(provider, session, parsedTime, pageInt)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -446,7 +446,7 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			bankTransactionCollection, err = accounting.FindBankTransactionsByPageModifiedSince(provider, session, pageInt, parsedTime)
+			bankTransactionCollection, err = accounting.FindBankTransactionsModifiedSinceByPage(provider, session, parsedTime, pageInt)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -465,7 +465,7 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			creditNoteCollection, err = accounting.FindCreditNotesByPageModifiedSince(provider, session, pageInt, parsedTime)
+			creditNoteCollection, err = accounting.FindCreditNotesModifiedSinceByPage(provider, session, parsedTime, pageInt)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
