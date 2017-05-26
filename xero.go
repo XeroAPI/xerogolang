@@ -312,6 +312,9 @@ func (p *Provider) FetchUser(session goth.Session) (goth.User, error) {
 
 //RefreshOAuth1Token should be used instead of RefeshToken which is not compliant with the Oauth1.0a standard
 func (p *Provider) RefreshOAuth1Token(session *Session) error {
+	if session.AccessToken == nil {
+		return fmt.Errorf("Could not refresh token as last valid accessToken was not found")
+	}
 	newAccessToken, err := p.consumer.RefreshToken(session.AccessToken)
 	if err != nil {
 		return err
