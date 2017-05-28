@@ -29,6 +29,7 @@ var (
 	creditNotes      = new(accounting.CreditNotes)
 	contactGroups    = new(accounting.ContactGroups)
 	currencies       = new(accounting.Currencies)
+	items            = new(accounting.Items)
 )
 
 func init() {
@@ -148,6 +149,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		contactGroups = contactGroupCollection
 		t, _ := template.New("foo").Parse(contactGroupTemplate)
 		t.Execute(res, contactGroupCollection.ContactGroups[0])
+	case "item":
+		items = accounting.CreateExampleItem()
+		itemCollection, err := items.CreateItem(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		items = itemCollection
+		t, _ := template.New("foo").Parse(itemTemplate)
+		t.Execute(res, itemCollection.Items[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -232,6 +243,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(contactGroupTemplate)
 		t.Execute(res, contactGroupCollection.ContactGroups[0])
+	case "item":
+		itemCollection, err := accounting.FindItem(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		items = itemCollection
+
+		t, _ := template.New("foo").Parse(itemTemplate)
+		t.Execute(res, itemCollection.Items[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -367,6 +388,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(currenciesTemplate)
 		t.Execute(res, currencyCollection.Currencies)
+	case "items":
+		itemCollection := new(accounting.Items)
+		var err error
+		if modifiedSince == "" {
+			itemCollection, err = accounting.FindItems(provider, session)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			itemCollection, err = accounting.FindItemsModifiedSince(provider, session, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(itemsTemplate)
+		t.Execute(res, itemCollection.Items)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -553,6 +593,20 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(creditNotesTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes)
+	case "items":
+		itemCollection := new(accounting.Items)
+		var err error
+		if whereClause == "" {
+			itemCollection, err = accounting.FindItems(provider, session)
+		} else {
+			itemCollection, err = accounting.FindItemsWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(itemsTemplate)
+		t.Execute(res, itemCollection.Items)
 	default:
 		fmt.Fprintln(res, "Where clauses not available on this entity")
 		return
@@ -678,6 +732,24 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(contactGroupTemplate)
 		t.Execute(res, contactGroupCollection.ContactGroups[0])
+	case "item":
+		if id != items.Items[0].ItemID {
+			fmt.Fprintln(res, "Could not update Item")
+			return
+		}
+		if items.Items[0].Description == "A Beltless Trenchcoat" {
+			items.Items[0].Description = "The beltless trench-coat"
+		} else if items.Items[0].Description == "The beltless trench-coat" {
+			items.Items[0].Description = "A Beltless Trenchcoat"
+		}
+
+		itemCollection, err := items.UpdateItem(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(itemTemplate)
+		t.Execute(res, itemCollection.Items[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -748,6 +820,9 @@ var indexConnectedTemplate = `
 <p><a href="/create/contactgroup?provider=xero">create contact group</a></p>
 <p><a href="/findall/contactgroups?provider=xero">find all contact groups</a></p>
 <p><a href="/findall/currencies?provider=xero">find all currencies</a></p>
+<p><a href="/create/item?provider=xero">create item</a></p>
+<p><a href="/findall/items?provider=xero">find all items</a></p>
+<p><a href="/findall/items?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all items changed since 1 May 2017</a></p>
 `
 
 var userTemplate = `
@@ -779,6 +854,9 @@ var userTemplate = `
 <p><a href="/create/contactgroup?provider=xero">create contact group</a></p>
 <p><a href="/findall/contactgroups?provider=xero">find all contact groups</a></p>
 <p><a href="/findall/currencies?provider=xero">find all currencies</a></p>
+<p><a href="/create/item?provider=xero">create item</a></p>
+<p><a href="/findall/items?provider=xero">find all items</a></p>
+<p><a href="/findall/items?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all items changed since 1 May 2017</a></p>
 `
 
 var invoiceTemplate = `
@@ -986,6 +1064,55 @@ var currenciesTemplate = `
 {{range $index,$element:= .}}
 <p>Code: {{.Code}}</p>
 <p>Description: {{.Description}}</p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var itemTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>Code: {{.Code}}</p>
+<p>InventoryAssetAccountCode: {{.InventoryAssetAccountCode}}</p>
+<p>Name: {{.Name}}</p>
+<p>IsSold: {{.IsSold}}</p>
+<p>IsPurchased: {{.IsPurchased}}</p>
+<p>Description: {{.Description}}</p>
+<p>PurchaseDescription: {{.PurchaseDescription}}</p>
+<p>PurchaseDetails:</p>
+<p>--------UnitPrice: {{.PurchaseDetails.UnitPrice}}</p>
+<p>--------AccountCode: {{.PurchaseDetails.AccountCode}}</p>
+<p>--------COGSAccountCode: {{.PurchaseDetails.COGSAccountCode}}</p>
+<p>--------TaxType: {{.PurchaseDetails.TaxType}}</p>
+<p>SalesDetails:</p>
+<p>--------UnitPrice: {{.SalesDetails.UnitPrice}}</p>
+<p>--------AccountCode: {{.SalesDetails.AccountCode}}</p>
+<p>--------COGSAccountCode: {{.SalesDetails.COGSAccountCode}}</p>
+<p>--------TaxType: {{.SalesDetails.TaxType}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/item/{{.ItemID}}?provider=xero">update description of this item</a></p>
+`
+
+var itemsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>Code: {{.Code}}</p>
+<p>InventoryAssetAccountCode: {{.InventoryAssetAccountCode}}</p>
+<p>Name: {{.Name}}</p>
+<p>IsSold: {{.IsSold}}</p>
+<p>IsPurchased: {{.IsPurchased}}</p>
+<p>Description: {{.Description}}</p>
+<p>PurchaseDescription: {{.PurchaseDescription}}</p>
+<p>PurchaseDetails:</p>
+<p>--------UnitPrice: {{.PurchaseDetails.UnitPrice}}</p>
+<p>--------AccountCode: {{.PurchaseDetails.AccountCode}}</p>
+<p>--------COGSAccountCode: {{.PurchaseDetails.COGSAccountCode}}</p>
+<p>--------TaxType: {{.PurchaseDetails.TaxType}}</p>
+<p>SalesDetails:</p>
+<p>--------UnitPrice: {{.SalesDetails.UnitPrice}}</p>
+<p>--------AccountCode: {{.SalesDetails.AccountCode}}</p>
+<p>--------COGSAccountCode: {{.SalesDetails.COGSAccountCode}}</p>
+<p>--------TaxType: {{.SalesDetails.TaxType}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/item/{{.ItemID}}?provider=xero">See details of this item</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `

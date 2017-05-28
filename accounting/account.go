@@ -172,6 +172,64 @@ func FindAccountsModifiedSince(provider *xero.Provider, session goth.Session, mo
 	return FindAccountsModifiedSinceWithParams(provider, session, modifiedSince, nil)
 }
 
+//FindAccountsModifiedSinceByPage will get a specified page of accounts which contains 100 accounts modified
+//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
+//Paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
+//you will only get summarised data e.g. no line items
+func FindAccountsModifiedSinceByPage(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int) (*Accounts, error) {
+	querystringParameters := map[string]string{
+		"page": strconv.Itoa(page),
+	}
+
+	return FindAccountsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
+}
+
+//FindAccountsModifiedSinceByPageWhere will get a specified page of accounts which contains 100 accounts modified
+//after a specified date that fit the criteria of a supplied where clause.. Page 1 gives the first 100, page two the next 100 etc etc.
+//Paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
+//you will only get summarised data e.g. no line items
+func FindAccountsModifiedSinceByPageWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int, whereClause string) (*Accounts, error) {
+	querystringParameters := map[string]string{
+		"page":  strconv.Itoa(page),
+		"where": whereClause,
+	}
+
+	return FindAccountsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
+}
+
+//FindAccountsByPage will get a specified page of accounts which contains 100 accounts
+//Page 1 gives the first 100, page two the next 100 etc etc.
+//paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
+//you will only get summarised data e.g. no line items
+func FindAccountsByPage(provider *xero.Provider, session goth.Session, page int) (*Accounts, error) {
+	querystringParameters := map[string]string{
+		"page": strconv.Itoa(page),
+	}
+	return FindAccountsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindAccountsByPageWhere will get a specified page of accounts which contains 100 accounts that fit the criteria of a supplied where clause.
+//Page 1 gives the first 100, page two the next 100 etc etc.
+//paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
+//you will only get summarised data e.g. no line items
+func FindAccountsByPageWhere(provider *xero.Provider, session goth.Session, page int, whereClause string) (*Accounts, error) {
+	querystringParameters := map[string]string{
+		"page":  strconv.Itoa(page),
+		"where": whereClause,
+	}
+	return FindAccountsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
+//FindAccountsWhere will get accounts that fit the criteria of a supplied where clause.
+//These account will not have details like line items.
+//If you need details then use FindAccountsByPage and get 100 accounts at a time
+func FindAccountsWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Accounts, error) {
+	querystringParameters := map[string]string{
+		"where": whereClause,
+	}
+	return FindAccountsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+}
+
 //FindAccounts will get all accounts. These account will not have details like line items.
 //If you need details then use FindAccountsByPage and get 100 accounts at a time
 func FindAccounts(provider *xero.Provider, session goth.Session) (*Accounts, error) {
@@ -190,26 +248,6 @@ func FindAccount(provider *xero.Provider, session goth.Session, accountID string
 	}
 
 	return unmarshalAccount(accountResponseBytes)
-}
-
-//FindAccountsByPageModifiedSince will get a specified page of accounts which contains 100 accounts modified
-//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
-//you will only get summarised data e.g. no line items
-func FindAccountsByPageModifiedSince(provider *xero.Provider, session goth.Session, page int, modifiedSince time.Time) (*Accounts, error) {
-	querystringParameters := map[string]string{
-		"page": strconv.Itoa(page),
-	}
-
-	return FindAccountsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindAccountsByPage will get a specified page of accounts which contains 100 accounts
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//paged accounts contain all the detail of the accounts whereas if you use FindAllAccounts
-//you will only get summarised data e.g. no line items
-func FindAccountsByPage(provider *xero.Provider, session goth.Session, page int) (*Accounts, error) {
-	return FindAccountsByPageModifiedSince(provider, session, page, dayZero)
 }
 
 //RemoveAccount will get a single account - accountID must be a GUID for an account
