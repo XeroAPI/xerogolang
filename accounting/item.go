@@ -171,11 +171,11 @@ func FindItemsModifiedSince(provider *xero.Provider, session goth.Session, modif
 }
 
 //FindItemsModifiedSinceWhere will get all items modified after a specified date that fit the criteria of a supplied where clause.
-func FindItemsModifiedSinceWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Items, error) {
+func FindItemsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*Items, error) {
 	querystringParameters := map[string]string{
 		"where": whereClause,
 	}
-	return FindItemsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+	return FindItemsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
 }
 
 //FindItemsWhere will get items that fit the criteria of a supplied where clause.

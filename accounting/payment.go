@@ -161,11 +161,11 @@ func FindPaymentsModifiedSince(provider *xero.Provider, session goth.Session, mo
 }
 
 //FindPaymentsModifiedSinceWhere will get all payments modified after a specified date that fit the criteria of a supplied where clause.
-func FindPaymentsModifiedSinceWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Payments, error) {
+func FindPaymentsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*Payments, error) {
 	querystringParameters := map[string]string{
 		"where": whereClause,
 	}
-	return FindPaymentsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+	return FindPaymentsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
 }
 
 //FindPaymentsWhere will get payments that fit the criteria of a supplied where clause.
