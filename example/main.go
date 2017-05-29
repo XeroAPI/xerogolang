@@ -31,6 +31,7 @@ var (
 	currencies       = new(accounting.Currencies)
 	items            = new(accounting.Items)
 	journals         = new(accounting.Journals)
+	manualJournals   = new(accounting.ManualJournals)
 )
 
 func init() {
@@ -160,6 +161,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		items = itemCollection
 		t, _ := template.New("foo").Parse(itemTemplate)
 		t.Execute(res, itemCollection.Items[0])
+	case "manualjournal":
+		manualJournals = accounting.CreateExampleManualJournal()
+		manualJournalCollection, err := manualJournals.CreateManualJournal(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		manualJournals = manualJournalCollection
+		t, _ := template.New("foo").Parse(manualJournalTemplate)
+		t.Execute(res, manualJournalCollection.ManualJournals[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -264,6 +275,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(journalTemplate)
 		t.Execute(res, journalCollection.Journals[0])
+	case "manualjournal":
+		manualJournalCollection, err := accounting.FindManualJournal(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		manualJournals = manualJournalCollection
+
+		t, _ := template.New("foo").Parse(manualJournalTemplate)
+		t.Execute(res, manualJournalCollection.ManualJournals[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -437,6 +458,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(journalsTemplate)
 		t.Execute(res, journalCollection.Journals)
+	case "manualjournals":
+		manualJournalCollection := new(accounting.ManualJournals)
+		var err error
+		if modifiedSince == "" {
+			manualJournalCollection, err = accounting.FindManualJournals(provider, session)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			manualJournalCollection, err = accounting.FindManualJournalsModifiedSince(provider, session, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(manualJournalsTemplate)
+		t.Execute(res, manualJournalCollection.ManualJournals)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -562,6 +602,25 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(journalsTemplate)
 		t.Execute(res, journalCollection.Journals)
+	case "manualjournals":
+		manualJournalCollection := new(accounting.ManualJournals)
+		var err error
+		if modifiedSince == "" {
+			manualJournalCollection, err = accounting.FindManualJournalsByPage(provider, session, pageInt)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			manualJournalCollection, err = accounting.FindManualJournalsModifiedSinceByPage(provider, session, parsedTime, pageInt)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(manualJournalsTemplate)
+		t.Execute(res, manualJournalCollection.ManualJournals)
 	default:
 		fmt.Fprintln(res, "Paging not supported on object specified")
 		return
@@ -656,6 +715,20 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(itemsTemplate)
 		t.Execute(res, itemCollection.Items)
+	case "manualjournals":
+		manualJournalCollection := new(accounting.ManualJournals)
+		var err error
+		if whereClause == "" {
+			manualJournalCollection, err = accounting.FindManualJournals(provider, session)
+		} else {
+			manualJournalCollection, err = accounting.FindManualJournalsWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(manualJournalsTemplate)
+		t.Execute(res, manualJournalCollection.ManualJournals)
 	default:
 		fmt.Fprintln(res, "Where clauses not available on this entity")
 		return
@@ -799,6 +872,24 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(itemTemplate)
 		t.Execute(res, itemCollection.Items[0])
+	case "manualjournal":
+		if id != manualJournals.ManualJournals[0].ManualJournalID {
+			fmt.Fprintln(res, "Could not update ManualJournal")
+			return
+		}
+		if manualJournals.ManualJournals[0].Status == "DRAFT" {
+			manualJournals.ManualJournals[0].Status = "POSTED"
+		} else if manualJournals.ManualJournals[0].Status == "POSTED" {
+			manualJournals.ManualJournals[0].Status = "DRAFT"
+		}
+
+		manualJournalCollection, err := manualJournals.UpdateManualJournal(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(manualJournalTemplate)
+		t.Execute(res, manualJournalCollection.ManualJournals[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -875,6 +966,10 @@ var indexConnectedTemplate = `
 <p><a href="/findall/journals?provider=xero">find all journals</a></p>
 <p><a href="/findall/journals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all journals changed since 1 May 2017</a></p>
 <p><a href="/findall/journals/300?provider=xero">find the 100 journals after Journal 300</a></p>
+<p><a href="/create/manualjournal?provider=xero">create manual journal</a></p>
+<p><a href="/findall/manualjournals?provider=xero">find all manual journals</a></p>
+<p><a href="/findall/manualjournals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all manual journals changed since 1 May 2017</a></p>
+<p><a href="/findall/manualjournals/1?provider=xero">find the first 100 manual journals</a></p>
 `
 
 var userTemplate = `
@@ -912,6 +1007,10 @@ var userTemplate = `
 <p><a href="/findall/journals?provider=xero">find all journals</a></p>
 <p><a href="/findall/journals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all journals changed since 1 May 2017</a></p>
 <p><a href="/findall/journals/300?provider=xero">find the 100 journals after Journal 300</a></p>
+<p><a href="/create/manualjournal?provider=xero">create manual journal</a></p>
+<p><a href="/findall/manualjournals?provider=xero">find all manual journals</a></p>
+<p><a href="/findall/manualjournals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all manual journals changed since 1 May 2017</a></p>
+<p><a href="/findall/manualjournals/1?provider=xero">find the first 100 manual journals</a></p>
 `
 
 var invoiceTemplate = `
@@ -1194,6 +1293,37 @@ var journalsTemplate = `
 <p>Journal Number: {{.JournalNumber}}</p>
 <p>Date: {{.JournalDate}}</p>
 <p><a href="/find/journal/{{.JournalID}}?provider=xero">See details of this journal</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var manualJournalTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.ManualJournalID}}</p>
+<p>Narration: {{.Narration}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .JournalLines}}
+<p>LineItems: </p>
+{{range .JournalLines}}
+	<p>--  Description:{{.Description}}  |  Account:{{.AccountCode}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/manualjournal/{{.ManualJournalID}}?provider=xero">update status of this manual journal</a></p>
+`
+
+var manualJournalsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.ManualJournalID}}</p>
+<p>Narration: {{.Narration}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/manualjournal/{{.ManualJournalID}}?provider=xero">See details of this manual journal</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
