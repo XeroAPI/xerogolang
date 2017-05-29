@@ -32,6 +32,7 @@ var (
 	items            = new(accounting.Items)
 	journals         = new(accounting.Journals)
 	manualJournals   = new(accounting.ManualJournals)
+	payments         = new(accounting.Payments)
 )
 
 func init() {
@@ -285,6 +286,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(manualJournalTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals[0])
+	case "payment":
+		paymentCollection, err := accounting.FindPayment(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		payments = paymentCollection
+
+		t, _ := template.New("foo").Parse(paymentTemplate)
+		t.Execute(res, paymentCollection.Payments[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -477,6 +488,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(manualJournalsTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals)
+	case "payments":
+		paymentCollection := new(accounting.Payments)
+		var err error
+		if modifiedSince == "" {
+			paymentCollection, err = accounting.FindPayments(provider, session)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			paymentCollection, err = accounting.FindPaymentsModifiedSince(provider, session, parsedTime)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(paymentsTemplate)
+		t.Execute(res, paymentCollection.Payments)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -729,6 +759,20 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(manualJournalsTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals)
+	case "payments":
+		paymentCollection := new(accounting.Payments)
+		var err error
+		if whereClause == "" {
+			paymentCollection, err = accounting.FindPayments(provider, session)
+		} else {
+			paymentCollection, err = accounting.FindPaymentsWhere(provider, session, whereClause)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(paymentsTemplate)
+		t.Execute(res, paymentCollection.Payments)
 	default:
 		fmt.Fprintln(res, "Where clauses not available on this entity")
 		return
@@ -890,6 +934,22 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(manualJournalTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals[0])
+	case "payment":
+		if id != payments.Payments[0].PaymentID {
+			fmt.Fprintln(res, "Could not update Payment")
+			return
+		}
+		if payments.Payments[0].Status == "AUTHORISED" {
+			payments.Payments[0].Status = "DELETED"
+		}
+
+		paymentCollection, err := payments.UpdatePayment(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(paymentTemplate)
+		t.Execute(res, paymentCollection.Payments[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -970,6 +1030,8 @@ var indexConnectedTemplate = `
 <p><a href="/findall/manualjournals?provider=xero">find all manual journals</a></p>
 <p><a href="/findall/manualjournals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all manual journals changed since 1 May 2017</a></p>
 <p><a href="/findall/manualjournals/1?provider=xero">find the first 100 manual journals</a></p>
+<p><a href="/findall/payments?provider=xero">find all payments</a></p>
+<p><a href="/findall/payments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all payments changed since 1 May 2017</a></p>
 `
 
 var userTemplate = `
@@ -1011,6 +1073,8 @@ var userTemplate = `
 <p><a href="/findall/manualjournals?provider=xero">find all manual journals</a></p>
 <p><a href="/findall/manualjournals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all manual journals changed since 1 May 2017</a></p>
 <p><a href="/findall/manualjournals/1?provider=xero">find the first 100 manual journals</a></p>
+<p><a href="/findall/payments?provider=xero">find all payments</a></p>
+<p><a href="/findall/payments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all payments changed since 1 May 2017</a></p>
 `
 
 var invoiceTemplate = `
@@ -1324,6 +1388,33 @@ var manualJournalsTemplate = `
 <p>Status: {{.Status}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/manualjournal/{{.ManualJournalID}}?provider=xero">See details of this manual journal</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var paymentTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.PaymentID}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Account: {{.Account.AccountID}}</p>
+<p>Contact: {{.Invoice.Contact.Name}}</p>
+<p>Invoice: {{.Invoice.InvoiceID}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/payment/{{.PaymentID}}?provider=xero">Delete this payment</a></p>
+`
+
+var paymentsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.PaymentID}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Account: {{.Account.AccountID}}</p>
+<p>Contact: {{.Invoice.Contact.Name}}</p>
+<p>Invoice: {{.Invoice.InvoiceID}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/payment/{{.PaymentID}}?provider=xero">See this payment</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
