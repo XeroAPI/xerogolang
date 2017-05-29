@@ -30,6 +30,7 @@ var (
 	contactGroups    = new(accounting.ContactGroups)
 	currencies       = new(accounting.Currencies)
 	items            = new(accounting.Items)
+	journals         = new(accounting.Journals)
 )
 
 func init() {
@@ -253,6 +254,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(itemTemplate)
 		t.Execute(res, itemCollection.Items[0])
+	case "journal":
+		journalCollection, err := accounting.FindJournal(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		journals = journalCollection
+
+		t, _ := template.New("foo").Parse(journalTemplate)
+		t.Execute(res, journalCollection.Journals[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -407,6 +418,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(itemsTemplate)
 		t.Execute(res, itemCollection.Items)
+	case "journals":
+		journalCollection := new(accounting.Journals)
+		var err error
+		if modifiedSince == "" {
+			journalCollection, err = accounting.FindJournals(provider, session, 0)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			journalCollection, err = accounting.FindJournalsModifiedSince(provider, session, parsedTime, 0)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(journalsTemplate)
+		t.Execute(res, journalCollection.Journals)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -513,6 +543,25 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(creditNotesTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes)
+	case "journals":
+		journalCollection := new(accounting.Journals)
+		var err error
+		if modifiedSince == "" {
+			journalCollection, err = accounting.FindJournals(provider, session, pageInt)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, err)
+				return
+			}
+			journalCollection, err = accounting.FindJournalsModifiedSince(provider, session, parsedTime, pageInt)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(journalsTemplate)
+		t.Execute(res, journalCollection.Journals)
 	default:
 		fmt.Fprintln(res, "Paging not supported on object specified")
 		return
@@ -823,6 +872,9 @@ var indexConnectedTemplate = `
 <p><a href="/create/item?provider=xero">create item</a></p>
 <p><a href="/findall/items?provider=xero">find all items</a></p>
 <p><a href="/findall/items?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all items changed since 1 May 2017</a></p>
+<p><a href="/findall/journals?provider=xero">find all journals</a></p>
+<p><a href="/findall/journals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all journals changed since 1 May 2017</a></p>
+<p><a href="/findall/journals/300?provider=xero">find the 100 journals after Journal 300</a></p>
 `
 
 var userTemplate = `
@@ -857,6 +909,9 @@ var userTemplate = `
 <p><a href="/create/item?provider=xero">create item</a></p>
 <p><a href="/findall/items?provider=xero">find all items</a></p>
 <p><a href="/findall/items?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all items changed since 1 May 2017</a></p>
+<p><a href="/findall/journals?provider=xero">find all journals</a></p>
+<p><a href="/findall/journals?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all journals changed since 1 May 2017</a></p>
+<p><a href="/findall/journals/300?provider=xero">find the 100 journals after Journal 300</a></p>
 `
 
 var invoiceTemplate = `
@@ -1113,6 +1168,32 @@ var itemsTemplate = `
 <p>--------TaxType: {{.SalesDetails.TaxType}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/item/{{.ItemID}}?provider=xero">See details of this item</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var journalTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.JournalID}}</p>
+<p>Journal Number: {{.JournalNumber}}</p>
+<p>Date: {{.JournalDate}}</p>
+{{if .JournalLines}}
+<p>Lines: </p>
+{{range .JournalLines}}
+	<p>--  Description:{{.Description}}  |  Account:{{.AccountCode}}  |  NetAmount:{{.NetAmount}}</p>
+{{end}}
+{{else}}
+	<p>No lines were found</p>
+{{end}}
+`
+
+var journalsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.JournalID}}</p>
+<p>Journal Number: {{.JournalNumber}}</p>
+<p>Date: {{.JournalDate}}</p>
+<p><a href="/find/journal/{{.JournalID}}?provider=xero">See details of this journal</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
