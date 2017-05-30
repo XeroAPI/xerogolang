@@ -33,7 +33,7 @@ type LineItem struct {
 	Tracking []TrackingCategory `json:"Tracking,omitempty" xml:"Tracking,omitempty"`
 
 	// Percentage discount being applied to a line item (only supported on ACCREC invoices – ACC PAY invoices and credit notes in Xero do not support discounts
-	DiscountRate string `json:"DiscountRate,omitempty" xml:"DiscountRate,omitempty"`
+	DiscountRate float32 `json:"DiscountRate,omitempty" xml:"DiscountRate,omitempty"`
 
 	// The Xero identifier for a Repeating Invoicee.g. 297c2dc5-cc47-4afd-8ec8-74990b8761e9
 	RepeatingInvoiceID string `json:"RepeatingInvoiceID,omitempty" xml:"RepeatingInvoiceID,omitempty"`

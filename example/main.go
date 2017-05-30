@@ -33,6 +33,7 @@ var (
 	journals         = new(accounting.Journals)
 	manualJournals   = new(accounting.ManualJournals)
 	payments         = new(accounting.Payments)
+	purchaseOrders   = new(accounting.PurchaseOrders)
 )
 
 func init() {
@@ -172,6 +173,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		manualJournals = manualJournalCollection
 		t, _ := template.New("foo").Parse(manualJournalTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals[0])
+	case "purchaseorder":
+		purchaseOrders = accounting.CreateExamplePurchaseOrder()
+		purchaseOrderCollection, err := purchaseOrders.CreatePurchaseOrder(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		purchaseOrders = purchaseOrderCollection
+		t, _ := template.New("foo").Parse(purchaseOrderTemplate)
+		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -296,6 +307,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(paymentTemplate)
 		t.Execute(res, paymentCollection.Payments[0])
+	case "purchaseorder":
+		purchaseOrderCollection, err := accounting.FindPurchaseOrder(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		purchaseOrders = purchaseOrderCollection
+
+		t, _ := template.New("foo").Parse(purchaseOrderTemplate)
+		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -507,6 +528,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(paymentsTemplate)
 		t.Execute(res, paymentCollection.Payments)
+	case "purchaseorders":
+		purchaseOrderCollection := new(accounting.PurchaseOrders)
+		var err error
+		if modifiedSince == "" {
+			purchaseOrderCollection, err = accounting.FindPurchaseOrders(provider, session, nil)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			purchaseOrderCollection, err = accounting.FindPurchaseOrdersModifiedSince(provider, session, parsedTime, nil)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(purchaseOrdersTemplate)
+		t.Execute(res, purchaseOrderCollection.PurchaseOrders)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -651,6 +691,28 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(manualJournalsTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals)
+	case "purchaseorders":
+		purchaseOrderCollection := new(accounting.PurchaseOrders)
+		var err error
+		querystringParameters := map[string]string{
+			"page": page,
+		}
+		if modifiedSince == "" {
+			purchaseOrderCollection, err = accounting.FindPurchaseOrders(provider, session, querystringParameters)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			purchaseOrderCollection, err = accounting.FindPurchaseOrdersModifiedSince(provider, session, parsedTime, querystringParameters)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(purchaseOrdersTemplate)
+		t.Execute(res, purchaseOrderCollection.PurchaseOrders)
 	default:
 		fmt.Fprintln(res, "Paging not supported on object specified")
 		return
@@ -950,6 +1012,24 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(paymentTemplate)
 		t.Execute(res, paymentCollection.Payments[0])
+	case "purchaseorder":
+		if id != purchaseOrders.PurchaseOrders[0].PurchaseOrderID {
+			fmt.Fprintln(res, "Could not update PurchaseOrder")
+			return
+		}
+		if purchaseOrders.PurchaseOrders[0].Status == "DRAFT" {
+			purchaseOrders.PurchaseOrders[0].Status = "SUBMITTED"
+		} else if purchaseOrders.PurchaseOrders[0].Status == "SUBMITTED" {
+			purchaseOrders.PurchaseOrders[0].Status = "DRAFT"
+		}
+
+		purchaseOrderCollection, err := purchaseOrders.UpdatePurchaseOrder(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(purchaseOrderTemplate)
+		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1032,6 +1112,10 @@ var indexConnectedTemplate = `
 <p><a href="/findall/manualjournals/1?provider=xero">find the first 100 manual journals</a></p>
 <p><a href="/findall/payments?provider=xero">find all payments</a></p>
 <p><a href="/findall/payments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all payments changed since 1 May 2017</a></p>
+<p><a href="/create/purchaseorder?provider=xero">create purchase order</a></p>
+<p><a href="/findall/purchaseorders?provider=xero">find all purchase orders</a></p>
+<p><a href="/findall/purchaseorders?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all purchase orders changed since 1 May 2017</a></p>
+<p><a href="/findall/purchaseorders/1?provider=xero">find the first 100 purchase orders</a></p>
 `
 
 var userTemplate = `
@@ -1075,6 +1159,10 @@ var userTemplate = `
 <p><a href="/findall/manualjournals/1?provider=xero">find the first 100 manual journals</a></p>
 <p><a href="/findall/payments?provider=xero">find all payments</a></p>
 <p><a href="/findall/payments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all payments changed since 1 May 2017</a></p>
+<p><a href="/create/purchaseorder?provider=xero">create purchase order</a></p>
+<p><a href="/findall/purchaseorders?provider=xero">find all purchase orders</a></p>
+<p><a href="/findall/purchaseorders?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all purchase orders changed since 1 May 2017</a></p>
+<p><a href="/findall/purchaseorders/1?provider=xero">find the first 100 purchase orders</a></p>
 `
 
 var invoiceTemplate = `
@@ -1415,6 +1503,40 @@ var paymentsTemplate = `
 <p>Invoice: {{.Invoice.InvoiceID}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/payment/{{.PaymentID}}?provider=xero">See this payment</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+var purchaseOrderTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.PurchaseOrderID}}</p>
+<p>PurchaseOrder Number: {{.PurchaseOrderNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .LineItems}}
+<p>LineItems: </p>
+{{range .LineItems}}
+	<p>--  Description:{{.Description}}  |  Quantity:{{.Quantity}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/purchaseorder/{{.PurchaseOrderID}}?provider=xero">update status of this purchase order</a></p>
+`
+
+var purchaseOrdersTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.PurchaseOrderID}}</p>
+<p>PurchaseOrder Number: {{.PurchaseOrderNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/purchaseorder/{{.PurchaseOrderID}}?provider=xero">See details of this purchase order</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
