@@ -20,20 +20,21 @@ import (
 )
 
 var (
-	provider         = xero.New(os.Getenv("XERO_KEY"), os.Getenv("XERO_SECRET"), "http://localhost:3000/auth/callback?provider=xero")
-	store            = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
-	invoices         = new(accounting.Invoices)
-	contacts         = new(accounting.Contacts)
-	accounts         = new(accounting.Accounts)
-	bankTransactions = new(accounting.BankTransactions)
-	creditNotes      = new(accounting.CreditNotes)
-	contactGroups    = new(accounting.ContactGroups)
-	currencies       = new(accounting.Currencies)
-	items            = new(accounting.Items)
-	journals         = new(accounting.Journals)
-	manualJournals   = new(accounting.ManualJournals)
-	payments         = new(accounting.Payments)
-	purchaseOrders   = new(accounting.PurchaseOrders)
+	provider           = xero.New(os.Getenv("XERO_KEY"), os.Getenv("XERO_SECRET"), "http://localhost:3000/auth/callback?provider=xero")
+	store              = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
+	invoices           = new(accounting.Invoices)
+	contacts           = new(accounting.Contacts)
+	accounts           = new(accounting.Accounts)
+	bankTransactions   = new(accounting.BankTransactions)
+	creditNotes        = new(accounting.CreditNotes)
+	contactGroups      = new(accounting.ContactGroups)
+	currencies         = new(accounting.Currencies)
+	items              = new(accounting.Items)
+	journals           = new(accounting.Journals)
+	manualJournals     = new(accounting.ManualJournals)
+	payments           = new(accounting.Payments)
+	purchaseOrders     = new(accounting.PurchaseOrders)
+	trackingCategories = new(accounting.TrackingCategories)
 )
 
 func init() {
@@ -183,6 +184,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		purchaseOrders = purchaseOrderCollection
 		t, _ := template.New("foo").Parse(purchaseOrderTemplate)
 		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
+	case "trackingcategory":
+		trackingCategories = accounting.GenerateExampleTrackingCategory()
+		trackingCategoryCollection, err := trackingCategories.CreateTrackingCategory(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		trackingCategories = trackingCategoryCollection
+		t, _ := template.New("foo").Parse(trackingCategoryTemplate)
+		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -317,6 +328,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(purchaseOrderTemplate)
 		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
+	case "trackingcategory":
+		trackingCategoryCollection, err := accounting.FindTrackingCategory(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		trackingCategories = trackingCategoryCollection
+
+		t, _ := template.New("foo").Parse(trackingCategoryTemplate)
+		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -547,6 +568,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(purchaseOrdersTemplate)
 		t.Execute(res, purchaseOrderCollection.PurchaseOrders)
+	case "trackingcategories":
+		trackingCategoryCollection, err := accounting.FindTrackingCategories(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(trackingCategoriesTemplate)
+		t.Execute(res, trackingCategoryCollection.TrackingCategories)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1030,6 +1059,24 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(purchaseOrderTemplate)
 		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
+	case "trackingcategory":
+		if id != trackingCategories.TrackingCategories[0].TrackingCategoryID {
+			fmt.Fprintln(res, "Could not update TrackingCategory")
+			return
+		}
+		if trackingCategories.TrackingCategories[0].Name == "Person Responsible" {
+			trackingCategories.TrackingCategories[0].Name = "Manager"
+		} else if trackingCategories.TrackingCategories[0].Name == "Manager" {
+			trackingCategories.TrackingCategories[0].Name = "Person Responsible"
+		}
+
+		trackingCategoryCollection, err := trackingCategories.UpdateTrackingCategory(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(trackingCategoryTemplate)
+		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1116,6 +1163,8 @@ var indexConnectedTemplate = `
 <p><a href="/findall/purchaseorders?provider=xero">find all purchase orders</a></p>
 <p><a href="/findall/purchaseorders?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all purchase orders changed since 1 May 2017</a></p>
 <p><a href="/findall/purchaseorders/1?provider=xero">find the first 100 purchase orders</a></p>
+<p><a href="/create/trackingcategory?provider=xero">create tracking category</a></p>
+<p><a href="/findall/trackingcategories?provider=xero">find all tracking categories</a></p>
 `
 
 var userTemplate = `
@@ -1163,6 +1212,8 @@ var userTemplate = `
 <p><a href="/findall/purchaseorders?provider=xero">find all purchase orders</a></p>
 <p><a href="/findall/purchaseorders?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all purchase orders changed since 1 May 2017</a></p>
 <p><a href="/findall/purchaseorders/1?provider=xero">find the first 100 purchase orders</a></p>
+<p><a href="/create/trackingcategory?provider=xero">create tracking category</a></p>
+<p><a href="/findall/trackingcategories?provider=xero">find all tracking categories</a></p>
 `
 
 var invoiceTemplate = `
@@ -1537,6 +1588,32 @@ var purchaseOrdersTemplate = `
 <p>Total: {{.Total}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/purchaseorder/{{.PurchaseOrderID}}?provider=xero">See details of this purchase order</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+var trackingCategoryTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.TrackingCategoryID}}</p>
+<p>Name: {{.Name}}</p>
+<p>Status: {{.Status}}</p>
+{{if .Options}}
+<p>Options: </p>
+{{range .Options}}
+     <p>--  ID: {{.TrackingOptionID}}  |  Name: {{.Name}}</p>
+{{end}}
+{{else}}
+     <p>No contacts were found</p>
+{{end}}
+<p><a href="/update/trackingcategory/{{.TrackingCategoryID}}?provider=xero">Update name of this tracking category</a></p>
+`
+
+var trackingCategoriesTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.TrackingCategoryID}}</p>
+<p>Name: {{.Name}}</p>
+<p>Status: {{.Status}}</p>
+<p><a href="/find/trackingcategory/{{.TrackingCategoryID}}?provider=xero">See details of this tracking category</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `

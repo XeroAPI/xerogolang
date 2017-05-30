@@ -1,5 +1,12 @@
 package accounting
 
+import (
+	"encoding/xml"
+
+	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/markbates/goth"
+)
+
 //TrackingOption is an option from within a Tracking category
 type TrackingOption struct {
 
@@ -13,5 +20,51 @@ type TrackingOption struct {
 	Status string `json:"Status,omitempty" xml:"Status,omitempty"`
 
 	// Filter by a tracking categorye.g. 297c2dc5-cc47-4afd-8ec8-74990b8761e9
-	TrackingCategoryID string `json:"TrackingCategoryID,omitempty" xml:"TrackingCategoryID,omitempty"`
+	TrackingCategoryID string `json:"TrackingCategoryID,omitempty" xml:"-"`
+}
+
+//Options is a collection of TrackingOptions
+type Options struct {
+	Options []TrackingOption `json:"Options,omitempty" xml:"Option,omitempty"`
+}
+
+//AddTrackingOptions will add tracking options to the TrackingCategory Specified on the first option
+//All options should belong to the same Tracking Category
+func (o *Options) AddTrackingOptions(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(o, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	trackingCategoryResponseBytes, err := provider.Create(session, "TrackingCategories/"+o.Options[0].TrackingCategoryID+"/Options", additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalTrackingCategory(trackingCategoryResponseBytes)
+}
+
+//UpdateTrackingOption will update a given tracking option
+func (t *TrackingOption) UpdateTrackingOption(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(t, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	trackingCategoryResponseBytes, err := provider.Update(session, "TrackingCategories/"+t.TrackingCategoryID+"/Options/"+t.TrackingOptionID, additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalTrackingCategory(trackingCategoryResponseBytes)
 }
