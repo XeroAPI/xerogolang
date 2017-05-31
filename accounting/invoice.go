@@ -3,7 +3,6 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strconv"
 	"strings"
 	"time"
 
@@ -187,11 +186,11 @@ func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) 
 	return unmarshalInvoice(invoiceResponseBytes)
 }
 
-//FindInvoicesModifiedSinceWithParams will get all Invoices modified after a specified date.
-//These Invoices will not have details like default account codes and tracking categories.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
+//FindInvoicesModifiedSince will get all Invoices modified after a specified date.
+//These Invoices will not have details like default line items by default.
+//If you need details then add a 'page' querystringParameter and get 100 Invoices at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindInvoicesModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Invoices, error) {
+func FindInvoicesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -208,121 +207,11 @@ func FindInvoicesModifiedSinceWithParams(provider *xero.Provider, session goth.S
 	return unmarshalInvoice(invoiceResponseBytes)
 }
 
-//FindInvoicesModifiedSince will get all Invoices modified after a specified date.
-//These Invoices will not have details like default account codes and tracking categories.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoicesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Invoices, error) {
-	return FindInvoicesModifiedSinceWithParams(provider, session, modifiedSince, nil)
-}
-
-//FindInvoicesModifiedSinceByPage will get a specified page of Invoices which contains 100 Invoices modified
-//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Invoices contain all the detail of the Invoices whereas if you use FindAllInvoices
-//you will only get summarised data e.g. no line items or tracking categories
-func FindInvoicesModifiedSinceByPage(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"page": strconv.Itoa(page),
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindInvoicesModifiedSinceWhere will get Invoices which contains 100 Invoices
-//that fit the criteria of a supplied where clause.
-//you will only get summarised data e.g. no line items or tracking categories
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoicesModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindInvoicesModifiedSinceOrderedBy will get Invoices and are order them by a supplied named element.
-//you will only get summarised data e.g. no line items or tracking categories
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoicesModifiedSinceOrderedBy(provider *xero.Provider, session goth.Session, modifiedSince time.Time, orderBy string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"order": orderBy,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindInvoicesByPage will get a specified page of Invoices which contains 100 Invoices
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//paged Invoices contain all the detail of the Invoices whereas if you use FindAllInvoices
-//you will only get summarised data e.g. no line items or tracking categories
-func FindInvoicesByPage(provider *xero.Provider, session goth.Session, page int) (*Invoices, error) {
-	return FindInvoicesModifiedSinceByPage(provider, session, dayZero, page)
-}
-
-//FindInvoicesByPageWhere will get a specified page of Invoices which contains 100 Invoices
-//that fit the criteria of a supplied where clause. Page 1 gives the first 100, page 2 the next 100 etc etc.
-//paged Invoices contain all the detail of the Invoices whereas if you use FindAllInvoices
-//you will only get summarised data e.g. no line items or tracking categories
-func FindInvoicesByPageWhere(provider *xero.Provider, session goth.Session, page int, whereClause string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindInvoicesByPageWhereOrderedBy will get a specified page of Invoices which contains 100 Invoices
-//that fit the criteria of a supplied where clause and are ordered by a supplied named element.
-//Page 1 gives the first 100, page 2 the next 100 etc etc.
-//paged Invoices contain all the detail of the Invoices whereas if you use FindInvoices
-//you will only get summarised data e.g. no line items or tracking categories
-func FindInvoicesByPageWhereOrderedBy(provider *xero.Provider, session goth.Session, page int, whereClause string, orderBy string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-		"order": orderBy,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindInvoicesOrderedBy will get all Invoices ordered by a supplied named element.
-//These Invoices will not have details like line items.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoicesOrderedBy(provider *xero.Provider, session goth.Session, orderBy string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"order": orderBy,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindInvoicesWhere will get all Invoices that fit the criteria of a supplied where clause.
-//These Invoices will not have details like line items.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoicesWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindInvoicesWhereOrderedBy will get all Invoices that fit the criteria of a supplied where clause
-//and are ordered by a supplied named element. These Invoices will not have details like line items.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoicesWhereOrderedBy(provider *xero.Provider, session goth.Session, whereClause string, orderedBy string) (*Invoices, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-		"order": orderedBy,
-	}
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindInvoicesWithParams will get all Invoices. These Invoice will not have details like line items.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
+//FindInvoices will get all Invoices. These Invoice will not have details like line items by default.
+//If you need details then add a 'page' querystringParameter and get 100 Invoices at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindInvoicesWithParams(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Invoices, error) {
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindInvoices will get all Invoices. These Invoice will not have details like line items.
-//If you need details then use FindInvoicesByPage and get 100 Invoices at a time
-func FindInvoices(provider *xero.Provider, session goth.Session) (*Invoices, error) {
-	return FindInvoicesModifiedSinceWithParams(provider, session, dayZero, nil)
+func FindInvoices(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Invoices, error) {
+	return FindInvoicesModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number

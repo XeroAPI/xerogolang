@@ -366,14 +366,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		invoiceCollection := new(accounting.Invoices)
 		var err error
 		if modifiedSince == "" {
-			invoiceCollection, err = accounting.FindInvoices(provider, session)
+			invoiceCollection, err = accounting.FindInvoices(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			invoiceCollection, err = accounting.FindInvoicesModifiedSince(provider, session, parsedTime)
+			invoiceCollection, err = accounting.FindInvoicesModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -593,6 +593,9 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	object := vars["object"]
 	page := vars["page"]
+	querystringParameters := map[string]string{
+		"page": page,
+	}
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
 		fmt.Fprintln(res, err)
@@ -610,14 +613,14 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		invoiceCollection := new(accounting.Invoices)
 		var err error
 		if modifiedSince == "" {
-			invoiceCollection, err = accounting.FindInvoicesByPage(provider, session, pageInt)
+			invoiceCollection, err = accounting.FindInvoices(provider, session, querystringParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			invoiceCollection, err = accounting.FindInvoicesModifiedSinceByPage(provider, session, parsedTime, pageInt)
+			invoiceCollection, err = accounting.FindInvoicesModifiedSince(provider, session, parsedTime, querystringParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -723,9 +726,6 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 	case "purchaseorders":
 		purchaseOrderCollection := new(accounting.PurchaseOrders)
 		var err error
-		querystringParameters := map[string]string{
-			"page": page,
-		}
 		if modifiedSince == "" {
 			purchaseOrderCollection, err = accounting.FindPurchaseOrders(provider, session, querystringParameters)
 		} else {
@@ -765,15 +765,12 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(res, err)
 		return
 	}
+	querystringParameters := map[string]string{
+		"where": whereClause,
+	}
 	switch object {
 	case "invoices":
-		invoiceCollection := new(accounting.Invoices)
-		var err error
-		if whereClause == "" {
-			invoiceCollection, err = accounting.FindInvoices(provider, session)
-		} else {
-			invoiceCollection, err = accounting.FindInvoicesWhere(provider, session, whereClause)
-		}
+		invoiceCollection, err := accounting.FindInvoices(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
