@@ -404,14 +404,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		accountCollection := new(accounting.Accounts)
 		var err error
 		if modifiedSince == "" {
-			accountCollection, err = accounting.FindAccounts(provider, session)
+			accountCollection, err = accounting.FindAccounts(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			accountCollection, err = accounting.FindAccountsModifiedSince(provider, session, parsedTime)
+			accountCollection, err = accounting.FindAccountsModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
