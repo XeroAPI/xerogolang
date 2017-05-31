@@ -3,7 +3,6 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strconv"
 	"strings"
 	"time"
 
@@ -151,11 +150,11 @@ func (b *BankTransactions) UpdateBankTransaction(provider *xero.Provider, sessio
 	return unmarshalBankTransaction(bankTransactionResponseBytes)
 }
 
-//FindBankTransactionsModifiedSinceWithParams will get all BankTransactions modified after a specified date.
-//These BankTransactions will not have details like default account codes and tracking categories.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
+//FindBankTransactionsModifiedSince will get all BankTransactions modified after a specified date.
+//These BankTransactions will not have details like default account codes and tracking categories by default.
+//If you need details then then add a 'page' querystringParameter and get 100 BankTransactions at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindBankTransactionsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransactions, error) {
+func FindBankTransactionsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -172,121 +171,11 @@ func FindBankTransactionsModifiedSinceWithParams(provider *xero.Provider, sessio
 	return unmarshalBankTransaction(bankTransactionResponseBytes)
 }
 
-//FindBankTransactionsModifiedSince will get all BankTransactions modified after a specified date.
-//These BankTransactions will not have details like default account codes and tracking categories.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactionsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*BankTransactions, error) {
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, modifiedSince, nil)
-}
-
-//FindBankTransactionsModifiedSinceByPage will get a specified page of BankTransactions which contains 100 BankTransactions modified
-//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged BankTransactions contain all the detail of the BankTransactions whereas if you use FindAllBankTransactions
-//you will only get summarised data e.g. no line items or tracking categories
-func FindBankTransactionsModifiedSinceByPage(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"page": strconv.Itoa(page),
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindBankTransactionsModifiedSinceWhere will get BankTransactions which contains 100 BankTransactions
-//that fit the criteria of a supplied where clause.
-//you will only get summarised data e.g. no line items or tracking categories
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactionsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindBankTransactionsModifiedSinceOrderedBy will get BankTransactions and are order them by a supplied named element.
-//you will only get summarised data e.g. no line items or tracking categories
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactionsModifiedSinceOrderedBy(provider *xero.Provider, session goth.Session, modifiedSince time.Time, orderBy string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"order": orderBy,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindBankTransactionsByPage will get a specified page of BankTransactions which contains 100 BankTransactions
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//paged BankTransactions contain all the detail of the BankTransactions whereas if you use FindAllBankTransactions
-//you will only get summarised data e.g. no line items or tracking categories
-func FindBankTransactionsByPage(provider *xero.Provider, session goth.Session, page int) (*BankTransactions, error) {
-	return FindBankTransactionsModifiedSinceByPage(provider, session, dayZero, page)
-}
-
-//FindBankTransactionsByPageWhere will get a specified page of BankTransactions which contains 100 BankTransactions
-//that fit the criteria of a supplied where clause. Page 1 gives the first 100, page 2 the next 100 etc etc.
-//paged BankTransactions contain all the detail of the BankTransactions whereas if you use FindAllBankTransactions
-//you will only get summarised data e.g. no line items or tracking categories
-func FindBankTransactionsByPageWhere(provider *xero.Provider, session goth.Session, page int, whereClause string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindBankTransactionsByPageWhereOrderedBy will get a specified page of BankTransactions which contains 100 BankTransactions
-//that fit the criteria of a supplied where clause and are ordered by a supplied named element.
-//Page 1 gives the first 100, page 2 the next 100 etc etc.
-//paged BankTransactions contain all the detail of the BankTransactions whereas if you use FindBankTransactions
-//you will only get summarised data e.g. no line items or tracking categories
-func FindBankTransactionsByPageWhereOrderedBy(provider *xero.Provider, session goth.Session, page int, whereClause string, orderBy string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-		"order": orderBy,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindBankTransactionsOrderedBy will get all BankTransactions ordered by a supplied named element.
-//These BankTransactions will not have details like line items.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactionsOrderedBy(provider *xero.Provider, session goth.Session, orderBy string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"order": orderBy,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindBankTransactionsWhere will get all BankTransactions that fit the criteria of a supplied where clause.
-//These BankTransactions will not have details like line items.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactionsWhere(provider *xero.Provider, session goth.Session, whereClause string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindBankTransactionsWhereOrderedBy will get all BankTransactions that fit the criteria of a supplied where clause
-//and are ordered by a supplied named element. These BankTransactions will not have details like line items.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactionsWhereOrderedBy(provider *xero.Provider, session goth.Session, whereClause string, orderedBy string) (*BankTransactions, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-		"order": orderedBy,
-	}
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindBankTransactionsWithParams will get all BankTransactions. These BankTransaction will not have details like line items.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
+//FindBankTransactions will get all BankTransactions. These BankTransaction will not have details like line items by default.
+//If you need details then then add a 'page' querystringParameter and get 100 BankTransactions at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindBankTransactionsWithParams(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransactions, error) {
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindBankTransactions will get all BankTransactions. These BankTransaction will not have details like line items.
-//If you need details then use FindBankTransactionsByPage and get 100 BankTransactions at a time
-func FindBankTransactions(provider *xero.Provider, session goth.Session) (*BankTransactions, error) {
-	return FindBankTransactionsModifiedSinceWithParams(provider, session, dayZero, nil)
+func FindBankTransactions(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransactions, error) {
+	return FindBankTransactionsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindBankTransaction will get a single BankTransaction - BankTransactionID can be a GUID for an BankTransaction or an BankTransaction number

@@ -423,14 +423,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		bankTransactionCollection := new(accounting.BankTransactions)
 		var err error
 		if modifiedSince == "" {
-			bankTransactionCollection, err = accounting.FindBankTransactions(provider, session)
+			bankTransactionCollection, err = accounting.FindBankTransactions(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			bankTransactionCollection, err = accounting.FindBankTransactionsModifiedSince(provider, session, parsedTime)
+			bankTransactionCollection, err = accounting.FindBankTransactionsModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -651,14 +651,14 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		bankTransactionCollection := new(accounting.BankTransactions)
 		var err error
 		if modifiedSince == "" {
-			bankTransactionCollection, err = accounting.FindBankTransactionsByPage(provider, session, pageInt)
+			bankTransactionCollection, err = accounting.FindBankTransactions(provider, session, querystringParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			bankTransactionCollection, err = accounting.FindBankTransactionsModifiedSinceByPage(provider, session, parsedTime, pageInt)
+			bankTransactionCollection, err = accounting.FindBankTransactionsModifiedSince(provider, session, parsedTime, querystringParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -792,13 +792,7 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(contactsTemplate)
 		t.Execute(res, contactCollection.Contacts)
 	case "banktransactions":
-		bankTransactionCollection := new(accounting.BankTransactions)
-		var err error
-		if whereClause == "" {
-			bankTransactionCollection, err = accounting.FindBankTransactions(provider, session)
-		} else {
-			bankTransactionCollection, err = accounting.FindBankTransactionsWhere(provider, session, whereClause)
-		}
+		bankTransactionCollection, err := accounting.FindBankTransactions(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
