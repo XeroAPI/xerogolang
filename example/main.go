@@ -135,7 +135,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(bankTransactionTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions[0])
 	case "creditnote":
-		creditNotes = accounting.CreateExampleCreditNote()
+		creditNotes = accounting.GenerateExampleCreditNote()
 		creditNoteCollection, err := creditNotes.CreateCreditNote(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -442,14 +442,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		creditNoteCollection := new(accounting.CreditNotes)
 		var err error
 		if modifiedSince == "" {
-			creditNoteCollection, err = accounting.FindCreditNotes(provider, session)
+			creditNoteCollection, err = accounting.FindCreditNotes(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			creditNoteCollection, err = accounting.FindCreditNotesModifiedSince(provider, session, parsedTime)
+			creditNoteCollection, err = accounting.FindCreditNotesModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -670,14 +670,14 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		creditNoteCollection := new(accounting.CreditNotes)
 		var err error
 		if modifiedSince == "" {
-			creditNoteCollection, err = accounting.FindCreditNotesByPage(provider, session, pageInt)
+			creditNoteCollection, err = accounting.FindCreditNotes(provider, session, querystringParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			creditNoteCollection, err = accounting.FindCreditNotesModifiedSinceByPage(provider, session, parsedTime, pageInt)
+			creditNoteCollection, err = accounting.FindCreditNotesModifiedSince(provider, session, parsedTime, querystringParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -794,13 +794,7 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(bankTransactionsTemplate)
 		t.Execute(res, bankTransactionCollection.BankTransactions)
 	case "creditnotes":
-		creditNoteCollection := new(accounting.CreditNotes)
-		var err error
-		if whereClause == "" {
-			creditNoteCollection, err = accounting.FindCreditNotes(provider, session)
-		} else {
-			creditNoteCollection, err = accounting.FindCreditNotesWhere(provider, session, whereClause)
-		}
+		creditNoteCollection, err := accounting.FindCreditNotes(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
