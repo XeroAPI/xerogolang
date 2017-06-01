@@ -385,14 +385,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		contactCollection := new(accounting.Contacts)
 		var err error
 		if modifiedSince == "" {
-			contactCollection, err = accounting.FindContacts(provider, session)
+			contactCollection, err = accounting.FindContacts(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			contactCollection, err = accounting.FindContactsModifiedSince(provider, session, parsedTime)
+			contactCollection, err = accounting.FindContactsModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -632,14 +632,14 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		contactCollection := new(accounting.Contacts)
 		var err error
 		if modifiedSince == "" {
-			contactCollection, err = accounting.FindContactsByPage(provider, session, pageInt)
+			contactCollection, err = accounting.FindContacts(provider, session, querystringParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, err)
 				return
 			}
-			contactCollection, err = accounting.FindContactsModifiedSinceByPage(provider, session, parsedTime, pageInt)
+			contactCollection, err = accounting.FindContactsModifiedSince(provider, session, parsedTime, querystringParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -778,13 +778,7 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(invoicesTemplate)
 		t.Execute(res, invoiceCollection.Invoices)
 	case "contacts":
-		contactCollection := new(accounting.Contacts)
-		var err error
-		if whereClause == "" {
-			contactCollection, err = accounting.FindContacts(provider, session)
-		} else {
-			contactCollection, err = accounting.FindContactsWhere(provider, session, whereClause)
-		}
+		contactCollection, err := accounting.FindContacts(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return

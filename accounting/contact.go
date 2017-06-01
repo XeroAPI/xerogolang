@@ -3,7 +3,6 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strconv"
 	"time"
 
 	xero "github.com/TheRegan/Xero-Golang"
@@ -203,11 +202,11 @@ func (c *Contacts) UpdateContact(provider *xero.Provider, session goth.Session) 
 	return unmarshalContact(contactResponseBytes)
 }
 
-//FindContactsModifiedSinceWithParams will get all Contacts modified after a specified date.
+//FindContactsModifiedSince will get all Contacts modified after a specified date.
 //These Contacts will not have details like default account codes and tracking categories.
-//If you need details then use FindContactsByPage and get 100 Contacts at a time
+//If you need details then then add a 'page' querystringParameter and get 100 Contacts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindContactsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Contacts, error) {
+func FindContactsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -224,122 +223,11 @@ func FindContactsModifiedSinceWithParams(provider *xero.Provider, session goth.S
 	return unmarshalContact(contactResponseBytes)
 }
 
-//FindContactsModifiedSinceByPageWhereOrderedBy will get a specified page of Contacts which contains 100 Contacts modified
-//after a specified date that fit the criteria of a supplied where clause and are ordered by a supplied named element.
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsModifiedSinceByPageWhereOrderedBy(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int, whereClause string, orderBy string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-		"order": orderBy,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindContactsModifiedSinceByPageOrderedBy will get a specified page of Contacts which contains 100 Contacts modified
-//after a specified date and are ordered by a supplied named element.
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsModifiedSinceByPageOrderedBy(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int, orderBy string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"order": orderBy,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindContactsModifiedSinceByPage will get a specified page of Contacts which contains 100 Contacts modified
-//after a specified date.  Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsModifiedSinceByPage(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"page": strconv.Itoa(page),
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindContactsModifiedSinceWhere will get Contacts that fit the criteria of a supplied where clause.
-//you will only get summarised data e.g. no default accounts or tracking categories
-//If you need details then use FindContactsByPage and get 100 Contacts at a time
-func FindContactsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindContactsModifiedSince will get all Contacts modified after a specified date.
-//These Contacts will not have details like default account codes and tracking categories.
-//If you need details then use FindContactsByPage and get 100 Contacts at a time
-func FindContactsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Contacts, error) {
-	return FindContactsModifiedSinceWithParams(provider, session, modifiedSince, nil)
-}
-
-//FindContactsByPage will get a specified page of Contacts which contains 100 Contacts
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsByPage(provider *xero.Provider, session goth.Session, page int) (*Contacts, error) {
-	return FindContactsModifiedSinceByPage(provider, session, dayZero, page)
-}
-
-//FindContactsByPageWhereOrderedBy will get a specified page of Contacts which contains 100 Contacts
-//that fit the criteria of a supplied where clause and are ordered by a supplied named element.
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsByPageWhereOrderedBy(provider *xero.Provider, session goth.Session, page int, whereClause string, orderBy string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-		"order": orderBy,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindContactsByPageOrderedBy will get a specified page of Contacts which contains 100 Contacts
-//and are ordered by a supplied named element.
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsByPageOrderedBy(provider *xero.Provider, session goth.Session, page int, orderBy string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"order": orderBy,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindContactsByPageWhere will get a specified page of Contacts which contains 100 Contacts that fit the criteria of a supplied where clause
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged Contacts contain all the detail of the Contacts whereas if you use FindAllContacts
-//you will only get summarised data e.g. no default accounts or tracking categories
-func FindContactsByPageWhere(provider *xero.Provider, session goth.Session, page int, whereClause string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindContactsWhere will get Contacts that fit the criteria of a supplied where clause
-//you will only get summarised data e.g. no default accounts or tracking categories
-//If you need details then use FindContactsByPage and get 100 Contacts at a time
-func FindContactsWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Contacts, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindContactsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
 //FindContacts will get all Contacts. These Contact will not have details like default accounts.
-//If you need details then use FindContactsByPage and get 100 Contacts at a time
-func FindContacts(provider *xero.Provider, session goth.Session) (*Contacts, error) {
-	return FindContactsModifiedSinceWithParams(provider, session, dayZero, nil)
+//If you need details then then add a 'page' querystringParameter and get 100 Contacts at a time
+//additional querystringParameters such as where, page, order can be added as a map
+func FindContacts(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Contacts, error) {
+	return FindContactsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindContact will get a single Contact - ContactID can be a GUID for an Contact or an Contact number
