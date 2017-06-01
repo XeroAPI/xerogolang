@@ -3,7 +3,6 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strconv"
 	"strings"
 	"time"
 
@@ -125,11 +124,11 @@ func (m *ManualJournals) UpdateManualJournal(provider *xero.Provider, session go
 	return unmarshalManualJournal(manualJournalResponseBytes)
 }
 
-//FindManualJournalsModifiedSinceWithParams will get all ManualJournals modified after a specified date.
-//These ManualJournals will not have details like default account codes and tracking categories.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
+//FindManualJournalsModifiedSince will get all ManualJournals modified after a specified date.
+//These ManualJournals will not have details like line items by default
+//If you need details then then add a 'page' querystringParameter and get 100 ManualJournals at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindManualJournalsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*ManualJournals, error) {
+func FindManualJournalsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -146,121 +145,11 @@ func FindManualJournalsModifiedSinceWithParams(provider *xero.Provider, session 
 	return unmarshalManualJournal(manualJournalResponseBytes)
 }
 
-//FindManualJournalsModifiedSince will get all ManualJournals modified after a specified date.
-//These ManualJournals will not have details like default account codes and tracking categories.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournalsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*ManualJournals, error) {
-	return FindManualJournalsModifiedSinceWithParams(provider, session, modifiedSince, nil)
-}
-
-//FindManualJournalsModifiedSinceByPage will get a specified page of ManualJournals which contains 100 ManualJournals modified
-//after a specified date. Page 1 gives the first 100, page two the next 100 etc etc.
-//Paged ManualJournals contain all the detail of the ManualJournals whereas if you use FindAllManualJournals
-//you will only get summarised data e.g. no line items or tracking categories
-func FindManualJournalsModifiedSinceByPage(provider *xero.Provider, session goth.Session, modifiedSince time.Time, page int) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"page": strconv.Itoa(page),
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindManualJournalsModifiedSinceWhere will get ManualJournals which contains 100 ManualJournals
-//that fit the criteria of a supplied where clause.
-//you will only get summarised data e.g. no line items or tracking categories
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournalsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindManualJournalsModifiedSinceOrderedBy will get ManualJournals and are order them by a supplied named element.
-//you will only get summarised data e.g. no line items or tracking categories
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournalsModifiedSinceOrderedBy(provider *xero.Provider, session goth.Session, modifiedSince time.Time, orderBy string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"order": orderBy,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindManualJournalsByPage will get a specified page of ManualJournals which contains 100 ManualJournals
-//Page 1 gives the first 100, page two the next 100 etc etc.
-//paged ManualJournals contain all the detail of the ManualJournals whereas if you use FindAllManualJournals
-//you will only get summarised data e.g. no line items or tracking categories
-func FindManualJournalsByPage(provider *xero.Provider, session goth.Session, page int) (*ManualJournals, error) {
-	return FindManualJournalsModifiedSinceByPage(provider, session, dayZero, page)
-}
-
-//FindManualJournalsByPageWhere will get a specified page of ManualJournals which contains 100 ManualJournals
-//that fit the criteria of a supplied where clause. Page 1 gives the first 100, page 2 the next 100 etc etc.
-//paged ManualJournals contain all the detail of the ManualJournals whereas if you use FindAllManualJournals
-//you will only get summarised data e.g. no line items or tracking categories
-func FindManualJournalsByPageWhere(provider *xero.Provider, session goth.Session, page int, whereClause string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindManualJournalsByPageWhereOrderedBy will get a specified page of ManualJournals which contains 100 ManualJournals
-//that fit the criteria of a supplied where clause and are ordered by a supplied named element.
-//Page 1 gives the first 100, page 2 the next 100 etc etc.
-//paged ManualJournals contain all the detail of the ManualJournals whereas if you use FindManualJournals
-//you will only get summarised data e.g. no line items or tracking categories
-func FindManualJournalsByPageWhereOrderedBy(provider *xero.Provider, session goth.Session, page int, whereClause string, orderBy string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"page":  strconv.Itoa(page),
-		"where": whereClause,
-		"order": orderBy,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindManualJournalsOrderedBy will get all ManualJournals ordered by a supplied named element.
-//These ManualJournals will not have details like line items.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournalsOrderedBy(provider *xero.Provider, session goth.Session, orderBy string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"order": orderBy,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindManualJournalsWhere will get all ManualJournals that fit the criteria of a supplied where clause.
-//These ManualJournals will not have details like line items.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournalsWhere(provider *xero.Provider, session goth.Session, whereClause string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindManualJournalsWhereOrderedBy will get all ManualJournals that fit the criteria of a supplied where clause
-//and are ordered by a supplied named element. These ManualJournals will not have details like line items.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournalsWhereOrderedBy(provider *xero.Provider, session goth.Session, whereClause string, orderedBy string) (*ManualJournals, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-		"order": orderedBy,
-	}
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
-//FindManualJournalsWithParams will get all ManualJournals. These ManualJournal will not have details like line items.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-//additional querystringParameters such as where, page, order can be added as a map
-func FindManualJournalsWithParams(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*ManualJournals, error) {
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
 //FindManualJournals will get all ManualJournals. These ManualJournal will not have details like line items.
-//If you need details then use FindManualJournalsByPage and get 100 ManualJournals at a time
-func FindManualJournals(provider *xero.Provider, session goth.Session) (*ManualJournals, error) {
-	return FindManualJournalsModifiedSinceWithParams(provider, session, dayZero, nil)
+//If you need details then then add a 'page' querystringParameter and get 100 ManualJournals at a time
+//additional querystringParameters such as where, page, order can be added as a map
+func FindManualJournals(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*ManualJournals, error) {
+	return FindManualJournalsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindManualJournal will get a single manualJournal - manualJournalID can be a GUID for an manualJournal or an manualJournal number
@@ -277,8 +166,8 @@ func FindManualJournal(provider *xero.Provider, session goth.Session, manualJour
 	return unmarshalManualJournal(manualJournalResponseBytes)
 }
 
-//CreateExampleManualJournal Creates an Example manualJournal
-func CreateExampleManualJournal() *ManualJournals {
+//GenerateExampleManualJournal Creates an Example manualJournal
+func GenerateExampleManualJournal() *ManualJournals {
 	lineItem := ManualJournalLine{
 		Description: "Importing & Exporting Services",
 		LineAmount:  395.00,

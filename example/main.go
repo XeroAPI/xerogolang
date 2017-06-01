@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"time"
 
 	"math"
@@ -165,7 +164,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(itemTemplate)
 		t.Execute(res, itemCollection.Items[0])
 	case "manualjournal":
-		manualJournals = accounting.CreateExampleManualJournal()
+		manualJournals = accounting.GenerateExampleManualJournal()
 		manualJournalCollection, err := manualJournals.CreateManualJournal(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -518,14 +517,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		manualJournalCollection := new(accounting.ManualJournals)
 		var err error
 		if modifiedSince == "" {
-			manualJournalCollection, err = accounting.FindManualJournals(provider, session)
+			manualJournalCollection, err = accounting.FindManualJournals(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			manualJournalCollection, err = accounting.FindManualJournalsModifiedSince(provider, session, parsedTime)
+			manualJournalCollection, err = accounting.FindManualJournalsModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -598,11 +597,6 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 	page := vars["page"]
 	querystringParameters := map[string]string{
 		"page": page,
-	}
-	pageInt, err := strconv.Atoi(page)
-	if err != nil {
-		fmt.Fprintln(res, err)
-		return
 	}
 	modifiedSince := req.URL.Query().Get("modifiedsince")
 	modifiedSince, err = url.QueryUnescape(modifiedSince)
@@ -714,14 +708,14 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		manualJournalCollection := new(accounting.ManualJournals)
 		var err error
 		if modifiedSince == "" {
-			manualJournalCollection, err = accounting.FindManualJournalsByPage(provider, session, pageInt)
+			manualJournalCollection, err = accounting.FindManualJournals(provider, session, querystringParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			manualJournalCollection, err = accounting.FindManualJournalsModifiedSinceByPage(provider, session, parsedTime, pageInt)
+			manualJournalCollection, err = accounting.FindManualJournalsModifiedSince(provider, session, parsedTime, querystringParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -816,13 +810,7 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(itemsTemplate)
 		t.Execute(res, itemCollection.Items)
 	case "manualjournals":
-		manualJournalCollection := new(accounting.ManualJournals)
-		var err error
-		if whereClause == "" {
-			manualJournalCollection, err = accounting.FindManualJournals(provider, session)
-		} else {
-			manualJournalCollection, err = accounting.FindManualJournalsWhere(provider, session, whereClause)
-		}
+		manualJournalCollection, err := accounting.FindManualJournals(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
