@@ -155,7 +155,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(contactGroupTemplate)
 		t.Execute(res, contactGroupCollection.ContactGroups[0])
 	case "item":
-		items = accounting.CreateExampleItem()
+		items = accounting.GenerateExampleItem()
 		itemCollection, err := items.CreateItem(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -477,14 +477,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		itemCollection := new(accounting.Items)
 		var err error
 		if modifiedSince == "" {
-			itemCollection, err = accounting.FindItems(provider, session)
+			itemCollection, err = accounting.FindItems(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			itemCollection, err = accounting.FindItemsModifiedSince(provider, session, parsedTime)
+			itemCollection, err = accounting.FindItemsModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -802,13 +802,7 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(creditNotesTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes)
 	case "items":
-		itemCollection := new(accounting.Items)
-		var err error
-		if whereClause == "" {
-			itemCollection, err = accounting.FindItems(provider, session)
-		} else {
-			itemCollection, err = accounting.FindItemsWhere(provider, session, whereClause)
-		}
+		itemCollection, err := accounting.FindItems(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return

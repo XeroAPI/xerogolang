@@ -146,9 +146,9 @@ func (i *Items) UpdateItem(provider *xero.Provider, session goth.Session) (*Item
 	return unmarshalItem(itemResponseBytes)
 }
 
-//FindItemsModifiedSinceWithParams will get all items modified after a specified date.
+//FindItemsModifiedSince will get all items modified after a specified date.
 //additional querystringParameters such as where, page, order can be added as a map
-func FindItemsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Items, error) {
+func FindItemsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -165,30 +165,9 @@ func FindItemsModifiedSinceWithParams(provider *xero.Provider, session goth.Sess
 	return unmarshalItem(itemResponseBytes)
 }
 
-//FindItemsModifiedSince will get all items modified after a specified date.
-func FindItemsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Items, error) {
-	return FindItemsModifiedSinceWithParams(provider, session, modifiedSince, nil)
-}
-
-//FindItemsModifiedSinceWhere will get all items modified after a specified date that fit the criteria of a supplied where clause.
-func FindItemsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*Items, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindItemsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindItemsWhere will get items that fit the criteria of a supplied where clause.
-func FindItemsWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Items, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindItemsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
 //FindItems will get all items.
-func FindItems(provider *xero.Provider, session goth.Session) (*Items, error) {
-	return FindItemsModifiedSinceWithParams(provider, session, dayZero, nil)
+func FindItems(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Items, error) {
+	return FindItemsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindItem will get a single item - itemID must be a GUID for an item
@@ -219,8 +198,8 @@ func RemoveItem(provider *xero.Provider, session goth.Session, itemID string) (*
 	return unmarshalItem(itemResponseBytes)
 }
 
-//CreateExampleItem Creates an Example item
-func CreateExampleItem() *Items {
+//GenerateExampleItem Creates an Example item
+func GenerateExampleItem() *Items {
 	item := Item{
 		Code:                "42",
 		Name:                "The Executive",
