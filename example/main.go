@@ -34,6 +34,7 @@ var (
 	payments           = new(accounting.Payments)
 	purchaseOrders     = new(accounting.PurchaseOrders)
 	trackingCategories = new(accounting.TrackingCategories)
+	taxRates           = new(accounting.TaxRates)
 )
 
 func init() {
@@ -193,6 +194,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		trackingCategories = trackingCategoryCollection
 		t, _ := template.New("foo").Parse(trackingCategoryTemplate)
 		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
+	case "taxrate":
+		taxRates = accounting.GenerateExampleTaxRate()
+		taxRateCollection, err := taxRates.CreateTaxRate(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		taxRates = taxRateCollection
+		t, _ := template.New("foo").Parse(taxRateTemplate)
+		t.Execute(res, taxRateCollection.TaxRates[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -578,6 +589,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(trackingCategoriesTemplate)
 		t.Execute(res, trackingCategoryCollection.TrackingCategories)
+	case "taxrates":
+		taxRateCollection, err := accounting.FindTaxRates(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(taxRatesTemplate)
+		t.Execute(res, taxRateCollection.TaxRates)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1038,6 +1057,22 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(trackingCategoryTemplate)
 		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
+	case "taxrate":
+		if id != taxRates.TaxRates[0].Name {
+			fmt.Fprintln(res, "Could not update TaxRate")
+			return
+		}
+		if taxRates.TaxRates[0].Status == "ACTIVE" {
+			taxRates.TaxRates[0].Status = "DELETED"
+		}
+
+		taxRateCollection, err := taxRates.UpdateTaxRate(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(taxRateTemplate)
+		t.Execute(res, taxRateCollection.TaxRates[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1126,6 +1161,8 @@ var indexConnectedTemplate = `
 <p><a href="/findall/purchaseorders/1?provider=xero">find the first 100 purchase orders</a></p>
 <p><a href="/create/trackingcategory?provider=xero">create tracking category</a></p>
 <p><a href="/findall/trackingcategories?provider=xero">find all tracking categories</a></p>
+<p><a href="/create/taxrate?provider=xero">create tax rate</a></p>
+<p><a href="/findall/taxrates?provider=xero">find all tax rates</a></p>
 `
 
 var userTemplate = `
@@ -1175,6 +1212,8 @@ var userTemplate = `
 <p><a href="/findall/purchaseorders/1?provider=xero">find the first 100 purchase orders</a></p>
 <p><a href="/create/trackingcategory?provider=xero">create tracking category</a></p>
 <p><a href="/findall/trackingcategories?provider=xero">find all tracking categories</a></p>
+<p><a href="/create/taxrate?provider=xero">create tax rate</a></p>
+<p><a href="/findall/taxrates?provider=xero">find all tax rates</a></p>
 `
 
 var invoiceTemplate = `
@@ -1575,6 +1614,41 @@ var trackingCategoriesTemplate = `
 <p>Name: {{.Name}}</p>
 <p>Status: {{.Status}}</p>
 <p><a href="/find/trackingcategory/{{.TrackingCategoryID}}?provider=xero">See details of this tracking category</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+var taxRateTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>Name: {{.Name}}</p>
+<p>TaxType: {{.TaxType}}</p>
+<p>ReportTaxType: {{.ReportTaxType}}</p>
+<p>Status: {{.Status}}</p>
+{{if .TaxComponents}}
+<p>TaxComponents: </p>
+{{range .TaxComponents}}
+     <p>--  Name: {{.Name}}   |   Rate:  {{.Rate}}</p>
+{{end}}
+{{else}}
+     <p>No Tax Components were found</p>
+{{end}}
+<p><a href="/update/taxrate/{{.Name}}?provider=xero">Delete this tax rate</a></p>
+`
+
+var taxRatesTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>Name: {{.Name}}</p>
+<p>TaxType: {{.TaxType}}</p>
+<p>ReportTaxType: {{.ReportTaxType}}</p>
+<p>Status: {{.Status}}</p>
+{{if .TaxComponents}}
+<p>TaxComponents: </p>
+{{range .TaxComponents}}
+     <p>--  Name: {{.Name}}   |   Rate:  {{.Rate}}</p>
+{{end}}
+{{else}}
+     <p>No Tax Components were found</p>
+{{end}}
 <p>-----------------------------------------------------</p>
 {{end}}
 `
