@@ -1,5 +1,15 @@
 package accounting
 
+import (
+	"encoding/json"
+	"encoding/xml"
+	"time"
+
+	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/markbates/goth"
+)
+
 //Prepayment are payments made before the associated document has been created
 type Prepayment struct {
 
@@ -7,7 +17,10 @@ type Prepayment struct {
 	Type string `json:"Type,omitempty" xml:"Type,omitempty"`
 
 	// The date the prepayment is created YYYY-MM-DD
-	Date string `json:"Date,omitempty" xml:"Date,omitempty"`
+	Date string `json:"DateString,omitempty" xml:"Date,omitempty"`
+
+	// See Contacts
+	Contact Contact `json:"Contact" xml:"Contact"`
 
 	// See Prepayment Status Codes
 	Status string `json:"Status,omitempty" xml:"Status,omitempty"`
@@ -40,11 +53,106 @@ type Prepayment struct {
 	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// The remaining credit balance on the prepayment
-	RemainingCredit string `json:"RemainingCredit,omitempty" xml:"RemainingCredit,omitempty"`
+	RemainingCredit float32 `json:"RemainingCredit,omitempty" xml:"RemainingCredit,omitempty"`
 
 	// See Allocations
 	Allocations []Allocation `json:"Allocations,omitempty" xml:"Allocations,omitempty"`
 
 	// boolean to indicate if a prepayment has an attachment
 	HasAttachments bool `json:"HasAttachments,omitempty" xml:"HasAttachments,omitempty"`
+}
+
+//Prepayments is a collection of Prepayments
+type Prepayments struct {
+	Prepayments []Prepayment `json:"Prepayments" xml:"Prepayment"`
+}
+
+//The Xero API returns Dates based on the .Net JSON date format available at the time of development
+//We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
+func (p *Prepayments) convertPrepaymentDates() error {
+	var err error
+	for n := len(p.Prepayments) - 1; n >= 0; n-- {
+		p.Prepayments[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(p.Prepayments[n].UpdatedDateUTC, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func unmarshalPrepayment(prepaymentResponseBytes []byte) (*Prepayments, error) {
+	var prepaymentResponse *Prepayments
+	err := json.Unmarshal(prepaymentResponseBytes, &prepaymentResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	err = prepaymentResponse.convertPrepaymentDates()
+	if err != nil {
+		return nil, err
+	}
+
+	return prepaymentResponse, err
+}
+
+//FindPrepaymentsModifiedSince will get all Prepayments modified after a specified date.
+//These Prepayments will not have details like default line items by default.
+//If you need details then add a 'page' querystringParameter and get 100 Prepayments at a time
+//additional querystringParameters such as where, page, order can be added as a map
+func FindPrepaymentsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Prepayments, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	if !modifiedSince.Equal(dayZero) {
+		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
+	}
+
+	prepaymentResponseBytes, err := provider.Find(session, "Prepayments", additionalHeaders, querystringParameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalPrepayment(prepaymentResponseBytes)
+}
+
+//FindPrepayments will get all Prepayments. These Prepayment will not have details like line items by default.
+//If you need details then add a 'page' querystringParameter and get 100 Prepayments at a time
+//additional querystringParameters such as where, page, order can be added as a map
+func FindPrepayments(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Prepayments, error) {
+	return FindPrepaymentsModifiedSince(provider, session, dayZero, querystringParameters)
+}
+
+//FindPrepayment will get a single prepayment - prepaymentID can be a GUID for an prepayment or an prepayment number
+func FindPrepayment(provider *xero.Provider, session goth.Session, prepaymentID string) (*Prepayments, error) {
+	additionalHeaders := map[string]string{
+		"Accept": "application/json",
+	}
+
+	prepaymentResponseBytes, err := provider.Find(session, "Prepayments/"+prepaymentID, additionalHeaders, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalPrepayment(prepaymentResponseBytes)
+}
+
+func (p *Prepayments) allocatePrepayment(provider *xero.Provider, session goth.Session, allocations Allocations) (*Prepayments, error) {
+	additionalHeaders := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/xml",
+	}
+
+	body, err := xml.MarshalIndent(allocations, "  ", "	")
+	if err != nil {
+		return nil, err
+	}
+
+	prepaymentResponseBytes, err := provider.Create(session, "Prepayments/"+p.Prepayments[0].PrepaymentID+"/Allocations", additionalHeaders, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalPrepayment(prepaymentResponseBytes)
 }
