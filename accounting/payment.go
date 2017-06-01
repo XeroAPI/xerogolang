@@ -136,9 +136,9 @@ func (p *Payments) UpdatePayment(provider *xero.Provider, session goth.Session) 
 	return unmarshalPayment(paymentResponseBytes)
 }
 
-//FindPaymentsModifiedSinceWithParams will get all payments modified after a specified date.
+//FindPaymentsModifiedSince will get all payments modified after a specified date.
 //additional querystringParameters such as where, page, order can be added as a map
-func FindPaymentsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Payments, error) {
+func FindPaymentsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Payments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -155,30 +155,9 @@ func FindPaymentsModifiedSinceWithParams(provider *xero.Provider, session goth.S
 	return unmarshalPayment(paymentResponseBytes)
 }
 
-//FindPaymentsModifiedSince will get all payments modified after a specified date.
-func FindPaymentsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time) (*Payments, error) {
-	return FindPaymentsModifiedSinceWithParams(provider, session, modifiedSince, nil)
-}
-
-//FindPaymentsModifiedSinceWhere will get all payments modified after a specified date that fit the criteria of a supplied where clause.
-func FindPaymentsModifiedSinceWhere(provider *xero.Provider, session goth.Session, modifiedSince time.Time, whereClause string) (*Payments, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindPaymentsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindPaymentsWhere will get payments that fit the criteria of a supplied where clause.
-func FindPaymentsWhere(provider *xero.Provider, session goth.Session, whereClause string) (*Payments, error) {
-	querystringParameters := map[string]string{
-		"where": whereClause,
-	}
-	return FindPaymentsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
 //FindPayments will get all payments.
-func FindPayments(provider *xero.Provider, session goth.Session) (*Payments, error) {
-	return FindPaymentsModifiedSinceWithParams(provider, session, dayZero, nil)
+func FindPayments(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Payments, error) {
+	return FindPaymentsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindPayment will get a single payment - paymentID must be a GUID for an payment
@@ -209,8 +188,8 @@ func RemovePayment(provider *xero.Provider, session goth.Session, paymentID stri
 	return unmarshalPayment(paymentResponseBytes)
 }
 
-//CreateExamplePayment Creates an Example payment
-func CreateExamplePayment(invoiceID string, amount float32) *Payments {
+//GenerateExamplePayment Creates an Example payment
+func GenerateExamplePayment(invoiceID string, amount float32) *Payments {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 

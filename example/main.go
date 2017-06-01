@@ -536,14 +536,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		paymentCollection := new(accounting.Payments)
 		var err error
 		if modifiedSince == "" {
-			paymentCollection, err = accounting.FindPayments(provider, session)
+			paymentCollection, err = accounting.FindPayments(provider, session, nil)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			paymentCollection, err = accounting.FindPaymentsModifiedSince(provider, session, parsedTime)
+			paymentCollection, err = accounting.FindPaymentsModifiedSince(provider, session, parsedTime, nil)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -818,13 +818,7 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(manualJournalsTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals)
 	case "payments":
-		paymentCollection := new(accounting.Payments)
-		var err error
-		if whereClause == "" {
-			paymentCollection, err = accounting.FindPayments(provider, session)
-		} else {
-			paymentCollection, err = accounting.FindPaymentsWhere(provider, session, whereClause)
-		}
+		paymentCollection, err := accounting.FindPayments(provider, session, querystringParameters)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
