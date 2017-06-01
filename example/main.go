@@ -348,6 +348,15 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(trackingCategoryTemplate)
 		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
+	case "overpayment":
+		overpaymentCollection, err := accounting.FindOverpayment(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(overpaymentTemplate)
+		t.Execute(res, overpaymentCollection.Overpayments[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -597,6 +606,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(taxRatesTemplate)
 		t.Execute(res, taxRateCollection.TaxRates)
+	case "overpayments":
+		overpaymentCollection := new(accounting.Overpayments)
+		var err error
+		if modifiedSince == "" {
+			overpaymentCollection, err = accounting.FindOverpayments(provider, session, nil)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			overpaymentCollection, err = accounting.FindOverpaymentsModifiedSince(provider, session, parsedTime, nil)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(overpaymentsTemplate)
+		t.Execute(res, overpaymentCollection.Overpayments)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -761,6 +789,25 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(purchaseOrdersTemplate)
 		t.Execute(res, purchaseOrderCollection.PurchaseOrders)
+	case "overpayments":
+		overpaymentCollection := new(accounting.Overpayments)
+		var err error
+		if modifiedSince == "" {
+			overpaymentCollection, err = accounting.FindOverpayments(provider, session, querystringParameters)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			overpaymentCollection, err = accounting.FindOverpaymentsModifiedSince(provider, session, parsedTime, querystringParameters)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(overpaymentsTemplate)
+		t.Execute(res, overpaymentCollection.Overpayments)
 	default:
 		fmt.Fprintln(res, "Paging not supported on object specified")
 		return
@@ -844,6 +891,14 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(paymentsTemplate)
 		t.Execute(res, paymentCollection.Payments)
+	case "overpayments":
+		overpaymentCollection, err := accounting.FindOverpayments(provider, session, querystringParameters)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(overpaymentsTemplate)
+		t.Execute(res, overpaymentCollection.Overpayments)
 	default:
 		fmt.Fprintln(res, "Where clauses not available on this entity")
 		return
@@ -1163,6 +1218,9 @@ var indexConnectedTemplate = `
 <p><a href="/findall/trackingcategories?provider=xero">find all tracking categories</a></p>
 <p><a href="/create/taxrate?provider=xero">create tax rate</a></p>
 <p><a href="/findall/taxrates?provider=xero">find all tax rates</a></p>
+<p><a href="/findall/overpayments?provider=xero">find all overpayments</a></p>
+<p><a href="/findall/overpayments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all overpayments changed since 1 May 2017</a></p>
+<p><a href="/findall/overpayments/1?provider=xero">find the first 100 overpayments</a></p>
 `
 
 var userTemplate = `
@@ -1214,6 +1272,9 @@ var userTemplate = `
 <p><a href="/findall/trackingcategories?provider=xero">find all tracking categories</a></p>
 <p><a href="/create/taxrate?provider=xero">create tax rate</a></p>
 <p><a href="/findall/taxrates?provider=xero">find all tax rates</a></p>
+<p><a href="/findall/overpayments?provider=xero">find all overpayments</a></p>
+<p><a href="/findall/overpayments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all overpayments changed since 1 May 2017</a></p>
+<p><a href="/findall/overpayments/1?provider=xero">find the first 100 overpayments</a></p>
 `
 
 var invoiceTemplate = `
@@ -1649,6 +1710,38 @@ var taxRatesTemplate = `
 {{else}}
      <p>No Tax Components were found</p>
 {{end}}
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var overpaymentTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.OverpaymentID}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .Allocations}}
+<p>Allocations: </p>
+{{range .Allocations}}
+	<p>--  AppliedAmount:{{.AppliedAmount}}  |  Date:{{.Date}}  |  Invoice:{{.Invoice.InvoiceID}}</p>
+{{end}}
+{{else}}
+	<p>No Allocations were found</p>
+{{end}}
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+`
+
+var overpaymentsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.OverpaymentID}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Total: {{.Total}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/overpayment/{{.OverpaymentID}}?provider=xero">See details of this overpayment</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
