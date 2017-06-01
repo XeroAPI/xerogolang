@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"strconv"
 	"time"
 
 	xero "github.com/TheRegan/Xero-Golang"
@@ -76,12 +75,12 @@ func unmarshalJournals(journalResponseBytes []byte) (*Journals, error) {
 	return journalResponse, err
 }
 
-//FindJournalsModifiedSinceWithParams will get all journals modified after a specified date.
+//FindJournalsModifiedSince will get all journals modified after a specified date.
 //A maximum of 100 journals will be returned in any response.
 //Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
 //Journals are ordered oldest to newest.
-//additional querystringParameters such as where, page, order can be added as a map
-func FindJournalsModifiedSinceWithParams(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Journals, error) {
+//additional querystringParameters such as offset and paymentsOnly can be added as a map
+func FindJournalsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Journals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -98,47 +97,13 @@ func FindJournalsModifiedSinceWithParams(provider *xero.Provider, session goth.S
 	return unmarshalJournals(journalResponseBytes)
 }
 
-//FindJournalsModifiedSince will get all journals modified after a specified date.
-//A maximum of 100 journals will be returned in any response.
-//Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
-//Journals are ordered oldest to newest.
-func FindJournalsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, offset int) (*Journals, error) {
-	querystringParameters := map[string]string{
-		"offset": strconv.Itoa(offset),
-	}
-	return FindJournalsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindJournalsModifiedSincePaymentsOnly will get all journals modified after a specified date and are on a cash basis. Journals are returned on accrual basis by default
-func FindJournalsModifiedSincePaymentsOnly(provider *xero.Provider, session goth.Session, modifiedSince time.Time, offset int) (*Journals, error) {
-	querystringParameters := map[string]string{
-		"paymentsOnly": "true",
-		"offset":       strconv.Itoa(offset),
-	}
-	return FindJournalsModifiedSinceWithParams(provider, session, modifiedSince, querystringParameters)
-}
-
-//FindJournalsPaymentsOnly will get all journals on a cash basis. Journals are returned on accrual basis by default
-//A maximum of 100 journals will be returned in any response.
-//Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
-//Journals are ordered oldest to newest.
-func FindJournalsPaymentsOnly(provider *xero.Provider, session goth.Session, offset int) (*Journals, error) {
-	querystringParameters := map[string]string{
-		"paymentsOnly": "true",
-		"offset":       strconv.Itoa(offset),
-	}
-	return FindJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
-}
-
 //FindJournals will get all journals.
 //A maximum of 100 journals will be returned in any response.
 //Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
 //Journals are ordered oldest to newest.
-func FindJournals(provider *xero.Provider, session goth.Session, offset int) (*Journals, error) {
-	querystringParameters := map[string]string{
-		"offset": strconv.Itoa(offset),
-	}
-	return FindJournalsModifiedSinceWithParams(provider, session, dayZero, querystringParameters)
+//additional querystringParameters such as offset and paymentsOnly can be added as a map
+func FindJournals(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Journals, error) {
+	return FindJournalsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindJournal will get a single journal - journalID can be a GUID for an journal or an journal number

@@ -495,15 +495,18 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 	case "journals":
 		journalCollection := new(accounting.Journals)
 		var err error
+		querystringParameters := map[string]string{
+			"offset": "0",
+		}
 		if modifiedSince == "" {
-			journalCollection, err = accounting.FindJournals(provider, session, 0)
+			journalCollection, err = accounting.FindJournals(provider, session, querystringParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, parseError)
 				return
 			}
-			journalCollection, err = accounting.FindJournalsModifiedSince(provider, session, parsedTime, 0)
+			journalCollection, err = accounting.FindJournalsModifiedSince(provider, session, parsedTime, querystringParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
@@ -686,17 +689,20 @@ func findAllPagedHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(creditNotesTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes)
 	case "journals":
+		journalParameters := map[string]string{
+			"offset": page,
+		}
 		journalCollection := new(accounting.Journals)
 		var err error
 		if modifiedSince == "" {
-			journalCollection, err = accounting.FindJournals(provider, session, pageInt)
+			journalCollection, err = accounting.FindJournals(provider, session, journalParameters)
 		} else {
 			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
 			if parseError != nil {
 				fmt.Fprintln(res, err)
 				return
 			}
-			journalCollection, err = accounting.FindJournalsModifiedSince(provider, session, parsedTime, pageInt)
+			journalCollection, err = accounting.FindJournalsModifiedSince(provider, session, parsedTime, journalParameters)
 		}
 		if err != nil {
 			fmt.Fprintln(res, err)
