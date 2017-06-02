@@ -366,6 +366,78 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(prepaymentTemplate)
 		t.Execute(res, prepaymentCollection.Prepayments[0])
+	case "agedpayablesbycontact":
+		agedPayablesCollection, err := accounting.RunAgedPayablesByContact(provider, session, id, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, agedPayablesCollection.Reports[0])
+	case "agedreceivablesbycontact":
+		agedReceivablesCollection, err := accounting.RunAgedReceivablesByContact(provider, session, id, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, agedReceivablesCollection.Reports[0])
+	case "balancesheet":
+		balanceSheetCollection, err := accounting.RunBalanceSheet(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, balanceSheetCollection.Reports[0])
+	case "banksummary":
+		bankSummaryCollection, err := accounting.RunBankSummary(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, bankSummaryCollection.Reports[0])
+	case "budgetsummary":
+		budgetSummaryCollection, err := accounting.RunBudgetSummary(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, budgetSummaryCollection.Reports[0])
+	case "executivesummary":
+		executiveSummaryCollection, err := accounting.RunExecutiveSummary(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, executiveSummaryCollection.Reports[0])
+	case "profitandloss":
+		profitAndLossCollection, err := accounting.RunProfitAndLoss(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, profitAndLossCollection.Reports[0])
+	case "trialbalance":
+		trialBalanceCollection, err := accounting.RunTrialBalance(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(reportTemplate)
+		t.Execute(res, trialBalanceCollection.Reports[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1279,6 +1351,12 @@ var indexConnectedTemplate = `
 <p><a href="/findall/prepayments?provider=xero">find all prepayments</a></p>
 <p><a href="/findall/prepayments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all prepayments changed since 1 May 2017</a></p>
 <p><a href="/findall/prepayments/1?provider=xero">find the first 100 prepayments</a></p>
+<p><a href="/find/balancesheet/0?provider=xero">run the balance sheet</a></p>
+<p><a href="/find/banksummary/0?provider=xero">run the bank summary</a></p>
+<p><a href="/find/budgetsummary/0?provider=xero">run the budget summary</a></p>
+<p><a href="/find/executivesummary/0?provider=xero">run the executive summary</a></p>
+<p><a href="/find/profitandloss/0?provider=xero">run the profit and loss</a></p>
+<p><a href="/find/trialbalance/0?provider=xero">run the trial balance</a></p>
 `
 
 var userTemplate = `
@@ -1336,6 +1414,12 @@ var userTemplate = `
 <p><a href="/findall/prepayments?provider=xero">find all prepayments</a></p>
 <p><a href="/findall/prepayments?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all prepayments changed since 1 May 2017</a></p>
 <p><a href="/findall/prepayments/1?provider=xero">find the first 100 prepayments</a></p>
+<p><a href="/find/balancesheet/0?provider=xero">run the balance sheet</a></p>
+<p><a href="/find/banksummary/0?provider=xero">run the bank summary</a></p>
+<p><a href="/find/budgetsummary/0?provider=xero">run the budget summary</a></p>
+<p><a href="/find/executivesummary/0?provider=xero">run the executive summary</a></p>
+<p><a href="/find/profitandloss/0?provider=xero">run the profit and loss</a></p>
+<p><a href="/find/trialbalance/0?provider=xero">run the trial balance</a></p>
 `
 
 var invoiceTemplate = `
@@ -1393,6 +1477,8 @@ var contactTemplate = `
 <p>TrackingCategoryOption: {{.TrackingCategoryOption}}</p>
 <p>Amount overdue: {{.Balances.AccountsReceivable.Overdue}}</p>
 <p><a href="/update/contact/{{.ContactID}}?provider=xero">update email address of this contact</a></p>
+<p><a href="/find/agedpayablesbycontact/{{.ContactID}}?provider=xero">run aged payables report for this contact</a></p>
+<p><a href="/find/agedreceivablesbycontact/{{.ContactID}}?provider=xero">run aged receivables report for this contact</a></p>
 <p><a href="/findwhere/invoices?provider=xero&where=Contact.ContactID%20%3D%20Guid%28%22{{.ContactID}}%22%29%0D%0A">see invoices for this contact</a></p>
 `
 
@@ -1836,4 +1922,77 @@ var prepaymentsTemplate = `
 <p><a href="/find/prepayment/{{.PrepaymentID}}?provider=xero">See details of this prepayment</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
+`
+var reportTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.ReportID}}</p>
+<p>Name: {{.ReportName}}</p>
+<p>Date: {{.ReportDate}}</p>
+<p>Type: {{.ReportType}}</p>
+{{if .Attributes}}
+<p>Attributes: </p>
+{{range .Attributes}}
+	<p>--  Name:{{.Name}}  |  Description:{{.Description}}  |  Value:{{.Value}}</p>
+{{end}}
+{{else}}
+	<p></p>
+{{end}}
+{{if .ReportTitles}}
+<p>ReportTitles: </p>
+{{range .ReportTitles}}
+	<p>--  ReportTitle:{{.}}</p>
+{{end}}
+{{else}}
+	<p>No ReportTitles were found</p>
+{{end}}
+{{if .Rows}}
+<p>Rows: </p>
+{{range .Rows}}
+	<p>--  Type:{{.RowType}}  |  Title:{{.Title}}</p>
+	{{if .Rows}}
+	<p>Rows: </p>
+	{{range .Rows}}
+		<p>--  Type:{{.RowType}}  |  Title:{{.Title}}</p>
+		{{if .Cells}}
+		<p>Cells: </p>
+		{{range .Cells}}
+			<p>--  Value:{{.Value}}</p>
+			{{if .Attributes}}
+			<p>Attributes: </p>
+			{{range .Attributes}}
+				<p>-- ID:{{.ID}}  |  Value:{{.Value}}</p>
+			{{end}}
+			{{else}}
+				<p></p>
+			{{end}}
+		{{end}}
+		{{else}}
+			<p></p>
+		{{end}}
+	{{end}}
+	{{else}}
+		<p>No Rows were found</p>
+	{{end}}
+	{{if .Cells}}
+	<p>Cells: </p>
+	{{range .Cells}}
+		<p>--  Value:{{.Value}}</p>
+		{{if .Attributes}}
+		<p>Attributes: </p>
+		{{range .Attributes}}
+			<p>-- ID:{{.ID}}  |  Value:{{.Value}}</p>
+		{{end}}
+		{{else}}
+			<p></p>
+		{{end}}
+	{{end}}
+	{{else}}
+		<p></p>
+	{{end}}
+{{end}}
+{{else}}
+	<p>No Rows were found</p>
+{{end}}
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p>--------------------------------------------------</p>
 `
