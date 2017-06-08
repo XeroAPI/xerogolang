@@ -64,19 +64,19 @@ func (l *LinkedTransactions) convertDates() error {
 	return nil
 }
 
-func unmarshalLinkedTransaction(LinkedTransactionResponseBytes []byte) (*LinkedTransactions, error) {
-	var LinkedTransactionResponse *LinkedTransactions
-	err := json.Unmarshal(LinkedTransactionResponseBytes, &LinkedTransactionResponse)
+func unmarshalLinkedTransaction(linkedTransactionResponseBytes []byte) (*LinkedTransactions, error) {
+	var linkedTransactionResponse *LinkedTransactions
+	err := json.Unmarshal(linkedTransactionResponseBytes, &linkedTransactionResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	err = LinkedTransactionResponse.convertDates()
+	err = linkedTransactionResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
 
-	return LinkedTransactionResponse, err
+	return linkedTransactionResponse, err
 }
 
 //Create will create LinkedTransactions given an LinkedTransactions struct
@@ -91,12 +91,12 @@ func (l *LinkedTransactions) Create(provider *xerogolang.Provider, session goth.
 		return nil, err
 	}
 
-	LinkedTransactionResponseBytes, err := provider.Create(session, "LinkedTransactions", additionalHeaders, body)
+	linkedTransactionResponseBytes, err := provider.Create(session, "LinkedTransactions", additionalHeaders, body)
 	if err != nil {
 		return nil, err
 	}
 
-	return unmarshalLinkedTransaction(LinkedTransactionResponseBytes)
+	return unmarshalLinkedTransaction(linkedTransactionResponseBytes)
 }
 
 //Update will update an LinkedTransaction given an LinkedTransactions struct
@@ -133,12 +133,12 @@ func FindLinkedTransactionsModifiedSince(provider *xerogolang.Provider, session 
 		additionalHeaders["If-Modified-Since"] = modifiedSince.Format(time.RFC3339)
 	}
 
-	LinkedTransactionResponseBytes, err := provider.Find(session, "LinkedTransactions", additionalHeaders, querystringParameters)
+	linkedTransactionResponseBytes, err := provider.Find(session, "LinkedTransactions", additionalHeaders, querystringParameters)
 	if err != nil {
 		return nil, err
 	}
 
-	return unmarshalLinkedTransaction(LinkedTransactionResponseBytes)
+	return unmarshalLinkedTransaction(linkedTransactionResponseBytes)
 }
 
 //FindLinkedTransactions will get all LinkedTransactions.
@@ -149,31 +149,31 @@ func FindLinkedTransactions(provider *xerogolang.Provider, session goth.Session,
 }
 
 //FindLinkedTransaction will get a single LinkedTransaction - LinkedTransactionID must be a GUID for an LinkedTransaction
-func FindLinkedTransaction(provider *xerogolang.Provider, session goth.Session, LinkedTransactionID string) (*LinkedTransactions, error) {
+func FindLinkedTransaction(provider *xerogolang.Provider, session goth.Session, linkedTransactionID string) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
 
-	LinkedTransactionResponseBytes, err := provider.Find(session, "LinkedTransactions/"+LinkedTransactionID, additionalHeaders, nil)
+	linkedTransactionResponseBytes, err := provider.Find(session, "LinkedTransactions/"+linkedTransactionID, additionalHeaders, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return unmarshalLinkedTransaction(LinkedTransactionResponseBytes)
+	return unmarshalLinkedTransaction(linkedTransactionResponseBytes)
 }
 
 //RemoveLinkedTransaction will get a single LinkedTransaction - LinkedTransactionID must be a GUID for an LinkedTransaction
-func RemoveLinkedTransaction(provider *xerogolang.Provider, session goth.Session, LinkedTransactionID string) (*LinkedTransactions, error) {
+func RemoveLinkedTransaction(provider *xerogolang.Provider, session goth.Session, linkedTransactionID string) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
 
-	LinkedTransactionResponseBytes, err := provider.Remove(session, "LinkedTransactions/"+LinkedTransactionID, additionalHeaders)
+	linkedTransactionResponseBytes, err := provider.Remove(session, "LinkedTransactions/"+linkedTransactionID, additionalHeaders)
 	if err != nil {
 		return nil, err
 	}
 
-	return unmarshalLinkedTransaction(LinkedTransactionResponseBytes)
+	return unmarshalLinkedTransaction(linkedTransactionResponseBytes)
 }
 
 //GenerateExampleLinkedTransaction Creates an Example LinkedTransaction
