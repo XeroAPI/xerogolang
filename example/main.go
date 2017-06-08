@@ -66,7 +66,7 @@ func indexHandler(res http.ResponseWriter, req *http.Request) {
 func authHandler(res http.ResponseWriter, req *http.Request) {
 	// try to get the user without re-authenticating
 	if gothUser, err := gothic.CompleteUserAuth(res, req); err == nil {
-		t, _ := template.New("foo").Parse(userTemplate)
+		t, _ := template.New("foo").Parse(connectTemplate)
 		t.Execute(res, gothUser)
 	} else {
 		gothic.BeginAuthHandler(res, req)
@@ -80,7 +80,7 @@ func callbackHandler(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(res, err)
 		return
 	}
-	t, _ := template.New("foo").Parse(userTemplate)
+	t, _ := template.New("foo").Parse(connectTemplate)
 	t.Execute(res, user)
 }
 
@@ -446,6 +446,15 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(linkedTransactionTemplate)
 		t.Execute(res, linkedTransactionCollection.LinkedTransactions[0])
+	case "user":
+		userCollection, err := accounting.FindUser(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(userTemplate)
+		t.Execute(res, userCollection.Users[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -752,6 +761,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(linkedTransactionsTemplate)
 		t.Execute(res, linkedTransactionCollection.LinkedTransactions)
+	case "users":
+		userCollection := new(accounting.Users)
+		var err error
+		if modifiedSince == "" {
+			userCollection, err = accounting.FindUsers(provider, session, nil)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			userCollection, err = accounting.FindUsersModifiedSince(provider, session, parsedTime, nil)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(usersTemplate)
+		t.Execute(res, userCollection.Users)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1072,6 +1100,14 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(prepaymentsTemplate)
 		t.Execute(res, prepaymentCollection.Prepayments)
+	case "users":
+		userCollection, err := accounting.FindUsers(provider, session, querystringParameters)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(usersTemplate)
+		t.Execute(res, userCollection.Users)
 	default:
 		fmt.Fprintln(res, "Where clauses not available on this entity")
 		return

@@ -66,9 +66,11 @@ var indexConnectedTemplate = `
 <p><a href="/find/trialbalance/0?provider=xero">run the trial balance</a></p>
 <p><a href="/findall/linkedtransactions?provider=xero">find the first 100 linked transactions</a></p>
 <p><a href="/findall/linkedtransactions/2?provider=xero">find the next 100 linkedtransactions</a></p>
+<p><a href="/findall/users?provider=xero">find all users</a></p>
+<p><a href="/findall/users?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all users changed since 1 May 2017</a></p>
 `
 
-var userTemplate = `
+var connectTemplate = `
 <p><a href="/disconnect?provider=xero">logout</a></p>
 <p>Connected Successfully!</p>
 <p>Method: {{.Email}}</p>
@@ -131,6 +133,8 @@ var userTemplate = `
 <p><a href="/find/trialbalance/0?provider=xero">run the trial balance</a></p>
 <p><a href="/findall/linkedtransactions?provider=xero">find the first 100 linked transactions</a></p>
 <p><a href="/findall/linkedtransactions/2?provider=xero">find the next 100 linkedtransactions</a></p>
+<p><a href="/findall/users?provider=xero">find all users</a></p>
+<p><a href="/findall/users?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all users changed since 1 May 2017</a></p>
 `
 
 var invoiceTemplate = `
@@ -732,6 +736,32 @@ var linkedTransactionsTemplate = `
 <p>Status: {{.Status}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/linkedtransaction/{{.LinkedTransactionID}}?provider=xero">See details of this linkedtransaction</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var userTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.UserID}}</p>
+<p>EmailAddress: {{.EmailAddress}}</p>
+<p>FirstName: {{.FirstName}}</p>
+<p>LastName: {{.LastName}}</p>
+<p>IsSubscriber: {{.IsSubscriber}}</p>
+<p>OrganisationRole: {{.OrganisationRole}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+`
+
+var usersTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.UserID}}</p>
+<p>EmailAddress: {{.EmailAddress}}</p>
+<p>FirstName: {{.FirstName}}</p>
+<p>LastName: {{.LastName}}</p>
+<p>IsSubscriber: {{.IsSubscriber}}</p>
+<p>OrganisationRole: {{.OrganisationRole}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/user/{{.UserID}}?provider=xero">See details of this User</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
