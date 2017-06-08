@@ -1,4 +1,4 @@
-package xero
+package xerogolang
 
 import (
 	"encoding/json"

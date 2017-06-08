@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -69,7 +69,7 @@ type Prepayments struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (p *Prepayments) convertPrepaymentDates() error {
+func (p *Prepayments) convertDates() error {
 	var err error
 	for n := len(p.Prepayments) - 1; n >= 0; n-- {
 		p.Prepayments[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(p.Prepayments[n].UpdatedDateUTC, true)
@@ -88,7 +88,7 @@ func unmarshalPrepayment(prepaymentResponseBytes []byte) (*Prepayments, error) {
 		return nil, err
 	}
 
-	err = prepaymentResponse.convertPrepaymentDates()
+	err = prepaymentResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func unmarshalPrepayment(prepaymentResponseBytes []byte) (*Prepayments, error) {
 //These Prepayments will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Prepayments at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindPrepaymentsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Prepayments, error) {
+func FindPrepaymentsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Prepayments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -120,12 +120,12 @@ func FindPrepaymentsModifiedSince(provider *xero.Provider, session goth.Session,
 //FindPrepayments will get all Prepayments. These Prepayment will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Prepayments at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindPrepayments(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Prepayments, error) {
+func FindPrepayments(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Prepayments, error) {
 	return FindPrepaymentsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindPrepayment will get a single prepayment - prepaymentID can be a GUID for an prepayment or an prepayment number
-func FindPrepayment(provider *xero.Provider, session goth.Session, prepaymentID string) (*Prepayments, error) {
+func FindPrepayment(provider *xerogolang.Provider, session goth.Session, prepaymentID string) (*Prepayments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -138,7 +138,9 @@ func FindPrepayment(provider *xero.Provider, session goth.Session, prepaymentID 
 	return unmarshalPrepayment(prepaymentResponseBytes)
 }
 
-func (p *Prepayments) allocatePrepayment(provider *xero.Provider, session goth.Session, allocations Allocations) (*Prepayments, error) {
+//Allocate allocates a prepayment - to create a prepayment
+//use the bankTransactions endpoint.
+func (p *Prepayments) Allocate(provider *xerogolang.Provider, session goth.Session, allocations Allocations) (*Prepayments, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",

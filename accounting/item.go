@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -78,7 +78,7 @@ type PurchaseAndSaleDetails struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (i *Items) convertItemDates() error {
+func (i *Items) convertDates() error {
 	var err error
 	for n := len(i.Items) - 1; n >= 0; n-- {
 		i.Items[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(i.Items[n].UpdatedDateUTC, true)
@@ -97,7 +97,7 @@ func unmarshalItem(itemResponseBytes []byte) (*Items, error) {
 		return nil, err
 	}
 
-	err = itemResponse.convertItemDates()
+	err = itemResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +105,8 @@ func unmarshalItem(itemResponseBytes []byte) (*Items, error) {
 	return itemResponse, err
 }
 
-//CreateItem will create items given an Items struct
-func (i *Items) CreateItem(provider *xero.Provider, session goth.Session) (*Items, error) {
+//Create will create items given an Items struct
+func (i *Items) Create(provider *xerogolang.Provider, session goth.Session) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -125,9 +125,9 @@ func (i *Items) CreateItem(provider *xero.Provider, session goth.Session) (*Item
 	return unmarshalItem(itemResponseBytes)
 }
 
-//UpdateItem will update an item given an Items struct
+//Update will update an item given an Items struct
 //This will only handle single item - you cannot update multiple items in a single call
-func (i *Items) UpdateItem(provider *xero.Provider, session goth.Session) (*Items, error) {
+func (i *Items) Update(provider *xerogolang.Provider, session goth.Session) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -148,7 +148,7 @@ func (i *Items) UpdateItem(provider *xero.Provider, session goth.Session) (*Item
 
 //FindItemsModifiedSince will get all items modified after a specified date.
 //additional querystringParameters such as where, page, order can be added as a map
-func FindItemsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Items, error) {
+func FindItemsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -166,12 +166,12 @@ func FindItemsModifiedSince(provider *xero.Provider, session goth.Session, modif
 }
 
 //FindItems will get all items.
-func FindItems(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Items, error) {
+func FindItems(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Items, error) {
 	return FindItemsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindItem will get a single item - itemID must be a GUID for an item
-func FindItem(provider *xero.Provider, session goth.Session, itemID string) (*Items, error) {
+func FindItem(provider *xerogolang.Provider, session goth.Session, itemID string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -185,7 +185,7 @@ func FindItem(provider *xero.Provider, session goth.Session, itemID string) (*It
 }
 
 //RemoveItem will get a single item - itemID must be a GUID for an item
-func RemoveItem(provider *xero.Provider, session goth.Session, itemID string) (*Items, error) {
+func RemoveItem(provider *xerogolang.Provider, session goth.Session, itemID string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

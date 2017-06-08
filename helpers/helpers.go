@@ -88,3 +88,18 @@ func DotNetJSONTimeToRFC3339(jsonTime string, isUTC bool) (string, error) {
 		return strings.TrimSuffix(formattedTime, "Z"), nil
 	}
 }
+
+//TodayRFC3339 returns an RFC3339 formatted date
+//with a 0 valued time as required by many Xero endpoints
+func TodayRFC3339() string {
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	return strings.TrimSuffix(today.Format(time.RFC3339), "Z")
+}
+
+//FormatDate returns an RFC3339 formatted date
+//with a 0 valued time as required by many Xero endpoints
+func FormatDate(date time.Time) string {
+	d := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+	return strings.TrimSuffix(d.Format(time.RFC3339), "Z")
+}

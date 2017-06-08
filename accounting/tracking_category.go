@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 
-	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/xerogolang"
 	"github.com/markbates/goth"
 )
 
@@ -39,8 +39,8 @@ func unmarshalTrackingCategory(trackingCategoryResponseBytes []byte) (*TrackingC
 	return trackingCategoryResponse, err
 }
 
-//CreateTrackingCategory will create trackingCategories given an TrackingCategories struct
-func (t *TrackingCategories) CreateTrackingCategory(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+//Create will create trackingCategories given an TrackingCategories struct
+func (t *TrackingCategories) Create(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -59,9 +59,9 @@ func (t *TrackingCategories) CreateTrackingCategory(provider *xero.Provider, ses
 	return unmarshalTrackingCategory(trackingCategoryResponseBytes)
 }
 
-//UpdateTrackingCategory will update an trackingCategory given an TrackingCategories struct
+//Update will update an trackingCategory given an TrackingCategories struct
 //This will only handle single trackingCategory - you cannot update multiple trackingCategories in a single call
-func (t *TrackingCategories) UpdateTrackingCategory(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+func (t *TrackingCategories) Update(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -81,7 +81,7 @@ func (t *TrackingCategories) UpdateTrackingCategory(provider *xero.Provider, ses
 }
 
 //FindTrackingCategories will get all trackingCategories
-func FindTrackingCategories(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+func FindTrackingCategories(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -95,7 +95,7 @@ func FindTrackingCategories(provider *xero.Provider, session goth.Session) (*Tra
 }
 
 //FindTrackingCategory will get a single trackingCategory - trackingCategoryID must be a GUID for an trackingCategory
-func FindTrackingCategory(provider *xero.Provider, session goth.Session, trackingCategoryID string) (*TrackingCategories, error) {
+func FindTrackingCategory(provider *xerogolang.Provider, session goth.Session, trackingCategoryID string) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -109,7 +109,7 @@ func FindTrackingCategory(provider *xero.Provider, session goth.Session, trackin
 }
 
 //RemoveTrackingCategory will get a single trackingCategory - trackingCategoryID must be a GUID for an trackingCategory
-func RemoveTrackingCategory(provider *xero.Provider, session goth.Session, trackingCategoryID string) (*TrackingCategories, error) {
+func RemoveTrackingCategory(provider *xerogolang.Provider, session goth.Session, trackingCategoryID string) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

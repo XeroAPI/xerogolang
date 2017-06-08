@@ -10,8 +10,8 @@ import (
 
 	"math"
 
-	"github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/accounting"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/accounting"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	provider           = xero.New(os.Getenv("XERO_KEY"), os.Getenv("XERO_SECRET"), "http://localhost:3000/auth/callback?provider=xero")
+	provider           = xerogolang.New(os.Getenv("XERO_KEY"), os.Getenv("XERO_SECRET"), "http://localhost:3000/auth/callback?provider=xero")
 	store              = sessions.NewFilesystemStore(os.TempDir(), []byte("xero-example"))
 	invoices           = new(accounting.Invoices)
 	contacts           = new(accounting.Contacts)
@@ -95,8 +95,8 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 	object := vars["object"]
 	switch object {
 	case "invoice":
-		invoices = accounting.CreateExampleInvoice()
-		invoiceCollection, err := invoices.CreateInvoice(provider, session)
+		invoices = accounting.GenerateExampleInvoice()
+		invoiceCollection, err := invoices.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -105,8 +105,8 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(invoiceTemplate)
 		t.Execute(res, invoiceCollection.Invoices[0])
 	case "contact":
-		contacts = accounting.CreateExampleContact()
-		contactCollection, err := contacts.CreateContact(provider, session)
+		contacts = accounting.GenerateExampleContact()
+		contactCollection, err := contacts.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -115,8 +115,8 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(contactTemplate)
 		t.Execute(res, contactCollection.Contacts[0])
 	case "account":
-		accounts = accounting.CreateExampleAccount()
-		accountCollection, err := accounts.CreateAccount(provider, session)
+		accounts = accounting.GenerateExampleAccount()
+		accountCollection, err := accounts.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -125,8 +125,8 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(accountTemplate)
 		t.Execute(res, accountCollection.Accounts[0])
 	case "banktransaction":
-		bankTransactions = accounting.CreateExampleBankTransaction()
-		bankTransactionCollection, err := bankTransactions.CreateBankTransaction(provider, session)
+		bankTransactions = accounting.GenerateExampleBankTransaction()
+		bankTransactionCollection, err := bankTransactions.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -136,7 +136,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t.Execute(res, bankTransactionCollection.BankTransactions[0])
 	case "creditnote":
 		creditNotes = accounting.GenerateExampleCreditNote()
-		creditNoteCollection, err := creditNotes.CreateCreditNote(provider, session)
+		creditNoteCollection, err := creditNotes.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -145,8 +145,8 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(creditNoteTemplate)
 		t.Execute(res, creditNoteCollection.CreditNotes[0])
 	case "contactgroup":
-		contactGroups = accounting.CreateExampleContactGroup()
-		contactGroupCollection, err := contactGroups.CreateContactGroup(provider, session)
+		contactGroups = accounting.GenerateExampleContactGroup()
+		contactGroupCollection, err := contactGroups.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -156,7 +156,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t.Execute(res, contactGroupCollection.ContactGroups[0])
 	case "item":
 		items = accounting.GenerateExampleItem()
-		itemCollection, err := items.CreateItem(provider, session)
+		itemCollection, err := items.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -166,7 +166,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t.Execute(res, itemCollection.Items[0])
 	case "manualjournal":
 		manualJournals = accounting.GenerateExampleManualJournal()
-		manualJournalCollection, err := manualJournals.CreateManualJournal(provider, session)
+		manualJournalCollection, err := manualJournals.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -175,8 +175,8 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(manualJournalTemplate)
 		t.Execute(res, manualJournalCollection.ManualJournals[0])
 	case "purchaseorder":
-		purchaseOrders = accounting.CreateExamplePurchaseOrder()
-		purchaseOrderCollection, err := purchaseOrders.CreatePurchaseOrder(provider, session)
+		purchaseOrders = accounting.GenerateExamplePurchaseOrder("")
+		purchaseOrderCollection, err := purchaseOrders.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -186,7 +186,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t.Execute(res, purchaseOrderCollection.PurchaseOrders[0])
 	case "trackingcategory":
 		trackingCategories = accounting.GenerateExampleTrackingCategory()
-		trackingCategoryCollection, err := trackingCategories.CreateTrackingCategory(provider, session)
+		trackingCategoryCollection, err := trackingCategories.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -196,7 +196,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		t.Execute(res, trackingCategoryCollection.TrackingCategories[0])
 	case "taxrate":
 		taxRates = accounting.GenerateExampleTaxRate()
-		taxRateCollection, err := taxRates.CreateTaxRate(provider, session)
+		taxRateCollection, err := taxRates.Create(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1056,7 +1056,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			invoices.Invoices[0].Status = "DRAFT"
 		}
 
-		invoiceCollection, err := invoices.UpdateInvoice(provider, session)
+		invoiceCollection, err := invoices.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1074,7 +1074,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			contacts.Contacts[0].EmailAddress = "it@shrinks.com"
 		}
 
-		contactCollection, err := contacts.UpdateContact(provider, session)
+		contactCollection, err := contacts.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1094,7 +1094,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			accounts.Accounts[0].EnablePaymentsToAccount = false
 		}
 
-		accountCollection, err := accounts.UpdateAccount(provider, session)
+		accountCollection, err := accounts.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1110,7 +1110,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			bankTransactions.BankTransactions[0].Status = "DELETED"
 		}
 
-		bankTransactionCollection, err := bankTransactions.UpdateBankTransaction(provider, session)
+		bankTransactionCollection, err := bankTransactions.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1128,7 +1128,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			creditNotes.CreditNotes[0].Status = "DRAFT"
 		}
 
-		creditNoteCollection, err := creditNotes.UpdateCreditNote(provider, session)
+		creditNoteCollection, err := creditNotes.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1144,7 +1144,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			contactGroups.ContactGroups[0].Status = "DELETED"
 		}
 
-		contactGroupCollection, err := contactGroups.UpdateContactGroup(provider, session)
+		contactGroupCollection, err := contactGroups.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1162,7 +1162,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			items.Items[0].Description = "A Beltless Trenchcoat"
 		}
 
-		itemCollection, err := items.UpdateItem(provider, session)
+		itemCollection, err := items.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1180,7 +1180,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			manualJournals.ManualJournals[0].Status = "DRAFT"
 		}
 
-		manualJournalCollection, err := manualJournals.UpdateManualJournal(provider, session)
+		manualJournalCollection, err := manualJournals.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1196,7 +1196,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			payments.Payments[0].Status = "DELETED"
 		}
 
-		paymentCollection, err := payments.UpdatePayment(provider, session)
+		paymentCollection, err := payments.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1214,7 +1214,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			purchaseOrders.PurchaseOrders[0].Status = "DRAFT"
 		}
 
-		purchaseOrderCollection, err := purchaseOrders.UpdatePurchaseOrder(provider, session)
+		purchaseOrderCollection, err := purchaseOrders.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1232,7 +1232,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			trackingCategories.TrackingCategories[0].Name = "Person Responsible"
 		}
 
-		trackingCategoryCollection, err := trackingCategories.UpdateTrackingCategory(provider, session)
+		trackingCategoryCollection, err := trackingCategories.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
@@ -1248,7 +1248,7 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 			taxRates.TaxRates[0].Status = "DELETED"
 		}
 
-		taxRateCollection, err := taxRates.UpdateTaxRate(provider, session)
+		taxRateCollection, err := taxRates.Update(provider, session)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return

@@ -3,11 +3,10 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strings"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -82,7 +81,7 @@ type BankTransactions struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (b *BankTransactions) convertBankTransactionDates() error {
+func (b *BankTransactions) convertDates() error {
 	var err error
 	for n := len(b.BankTransactions) - 1; n >= 0; n-- {
 		b.BankTransactions[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(b.BankTransactions[n].UpdatedDateUTC, true)
@@ -101,7 +100,7 @@ func unmarshalBankTransaction(bankTransactionResponseBytes []byte) (*BankTransac
 		return nil, err
 	}
 
-	err = bankTransactionResponse.convertBankTransactionDates()
+	err = bankTransactionResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +108,8 @@ func unmarshalBankTransaction(bankTransactionResponseBytes []byte) (*BankTransac
 	return bankTransactionResponse, err
 }
 
-//CreateBankTransaction will create BankTransactions given an BankTransactions struct
-func (b *BankTransactions) CreateBankTransaction(provider *xero.Provider, session goth.Session) (*BankTransactions, error) {
+//Create will create BankTransactions given an BankTransactions struct
+func (b *BankTransactions) Create(provider *xerogolang.Provider, session goth.Session) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -129,9 +128,9 @@ func (b *BankTransactions) CreateBankTransaction(provider *xero.Provider, sessio
 	return unmarshalBankTransaction(bankTransactionResponseBytes)
 }
 
-//UpdateBankTransaction will update a BankTransaction given a BankTransactions struct
+//Update will update a BankTransaction given a BankTransactions struct
 //This will only handle single BankTransaction - you cannot update multiple BankTransactions in a single call
-func (b *BankTransactions) UpdateBankTransaction(provider *xero.Provider, session goth.Session) (*BankTransactions, error) {
+func (b *BankTransactions) Update(provider *xerogolang.Provider, session goth.Session) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -154,7 +153,7 @@ func (b *BankTransactions) UpdateBankTransaction(provider *xero.Provider, sessio
 //These BankTransactions will not have details like default account codes and tracking categories by default.
 //If you need details then then add a 'page' querystringParameter and get 100 BankTransactions at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindBankTransactionsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransactions, error) {
+func FindBankTransactionsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -174,12 +173,12 @@ func FindBankTransactionsModifiedSince(provider *xero.Provider, session goth.Ses
 //FindBankTransactions will get all BankTransactions. These BankTransaction will not have details like line items by default.
 //If you need details then then add a 'page' querystringParameter and get 100 BankTransactions at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindBankTransactions(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransactions, error) {
+func FindBankTransactions(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransactions, error) {
 	return FindBankTransactionsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindBankTransaction will get a single BankTransaction - BankTransactionID can be a GUID for an BankTransaction or an BankTransaction number
-func FindBankTransaction(provider *xero.Provider, session goth.Session, bankTransactionID string) (*BankTransactions, error) {
+func FindBankTransaction(provider *xerogolang.Provider, session goth.Session, bankTransactionID string) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -192,17 +191,14 @@ func FindBankTransaction(provider *xero.Provider, session goth.Session, bankTran
 	return unmarshalBankTransaction(bankTransactionResponseBytes)
 }
 
-//CreateExampleBankTransaction Creates an Example bankTransaction
-func CreateExampleBankTransaction() *BankTransactions {
+//GenerateExampleBankTransaction Creates an Example bankTransaction
+func GenerateExampleBankTransaction() *BankTransactions {
 	lineItem := LineItem{
 		Description: "Importing & Exporting Services",
 		Quantity:    1.00,
 		UnitAmount:  395.00,
 		AccountCode: "200",
 	}
-
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 
 	bankAccount := BankAccount{
 		Code: "090",
@@ -213,7 +209,7 @@ func CreateExampleBankTransaction() *BankTransactions {
 		Contact: Contact{
 			Name: "George Costanza",
 		},
-		Date:        strings.TrimSuffix(today.Format(time.RFC3339), "Z"),
+		Date:        helpers.TodayRFC3339(),
 		LineItems:   []LineItem{},
 		BankAccount: bankAccount,
 	}

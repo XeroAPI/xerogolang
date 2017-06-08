@@ -3,8 +3,8 @@ package accounting
 import (
 	"encoding/json"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -102,7 +102,7 @@ type OrganisationCollection struct {
 }
 
 //FindOrganisation returns details about the Xero organisation you're connected to
-func FindOrganisation(provider *xero.Provider, session goth.Session) (*OrganisationCollection, error) {
+func FindOrganisation(provider *xerogolang.Provider, session goth.Session) (*OrganisationCollection, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

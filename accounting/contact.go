@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -134,7 +134,7 @@ type Balance struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (c *Contacts) convertContactDates() error {
+func (c *Contacts) convertDates() error {
 	var err error
 	for n := len(c.Contacts) - 1; n >= 0; n-- {
 		c.Contacts[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(c.Contacts[n].UpdatedDateUTC, true)
@@ -153,7 +153,7 @@ func unmarshalContact(contactResponseBytes []byte) (*Contacts, error) {
 		return nil, err
 	}
 
-	err = contactResponse.convertContactDates()
+	err = contactResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +161,8 @@ func unmarshalContact(contactResponseBytes []byte) (*Contacts, error) {
 	return contactResponse, err
 }
 
-//CreateContact will create Contacts given an Contacts struct
-func (c *Contacts) CreateContact(provider *xero.Provider, session goth.Session) (*Contacts, error) {
+//Create will create Contacts given an Contacts struct
+func (c *Contacts) Create(provider *xerogolang.Provider, session goth.Session) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -181,9 +181,9 @@ func (c *Contacts) CreateContact(provider *xero.Provider, session goth.Session) 
 	return unmarshalContact(contactResponseBytes)
 }
 
-//UpdateContact will update a Contact given a Contacts struct
+//Update will update a Contact given a Contacts struct
 //This will only handle single Contact - you cannot update multiple Contacts in a single call
-func (c *Contacts) UpdateContact(provider *xero.Provider, session goth.Session) (*Contacts, error) {
+func (c *Contacts) Update(provider *xerogolang.Provider, session goth.Session) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -206,7 +206,7 @@ func (c *Contacts) UpdateContact(provider *xero.Provider, session goth.Session) 
 //These Contacts will not have details like default account codes and tracking categories.
 //If you need details then then add a 'page' querystringParameter and get 100 Contacts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindContactsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Contacts, error) {
+func FindContactsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -226,12 +226,12 @@ func FindContactsModifiedSince(provider *xero.Provider, session goth.Session, mo
 //FindContacts will get all Contacts. These Contact will not have details like default accounts.
 //If you need details then then add a 'page' querystringParameter and get 100 Contacts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindContacts(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Contacts, error) {
+func FindContacts(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Contacts, error) {
 	return FindContactsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindContact will get a single Contact - ContactID can be a GUID for an Contact or an Contact number
-func FindContact(provider *xero.Provider, session goth.Session, contactID string) (*Contacts, error) {
+func FindContact(provider *xerogolang.Provider, session goth.Session, contactID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -244,8 +244,8 @@ func FindContact(provider *xero.Provider, session goth.Session, contactID string
 	return unmarshalContact(contactResponseBytes)
 }
 
-//AddContactToContactGroup will add a collection of Contacts to a supplied contactGroupID
-func (c *Contacts) AddContactToContactGroup(provider *xero.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
+//AddToContactGroup will add a collection of Contacts to a supplied contactGroupID
+func (c *Contacts) AddToContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -273,8 +273,8 @@ func (c *Contacts) AddContactToContactGroup(provider *xero.Provider, session got
 	return unmarshalContact(contactResponseBytes)
 }
 
-//RemoveContactFromContactGroup will remove a Contact from a supplied contactGroupID - must be done one at a time.
-func (c *Contacts) RemoveContactFromContactGroup(provider *xero.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
+//RemoveFromContactGroup will remove a Contact from a supplied contactGroupID - must be done one at a time.
+func (c *Contacts) RemoveFromContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -287,8 +287,8 @@ func (c *Contacts) RemoveContactFromContactGroup(provider *xero.Provider, sessio
 	return unmarshalContact(contactResponseBytes)
 }
 
-//CreateExampleContact Creates an Example contact
-func CreateExampleContact() *Contacts {
+//GenerateExampleContact Creates an Example contact
+func GenerateExampleContact() *Contacts {
 	contact := Contact{
 		Name: "Cosmo Kramer",
 	}

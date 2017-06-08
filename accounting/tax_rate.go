@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 
-	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/xerogolang"
 	"github.com/markbates/goth"
 )
 
+//TaxRate is a rate at which an item or service is taxed when sold or purchased
 type TaxRate struct {
 
 	// Name of tax rate
@@ -61,8 +62,8 @@ func unmarshalTaxRate(taxRateResponseBytes []byte) (*TaxRates, error) {
 	return taxRateResponse, err
 }
 
-//CreateTaxRate will create taxRates given an TaxRates struct
-func (t *TaxRates) CreateTaxRate(provider *xero.Provider, session goth.Session) (*TaxRates, error) {
+//Create will create taxRates given an TaxRates struct
+func (t *TaxRates) Create(provider *xerogolang.Provider, session goth.Session) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -81,9 +82,9 @@ func (t *TaxRates) CreateTaxRate(provider *xero.Provider, session goth.Session) 
 	return unmarshalTaxRate(taxRateResponseBytes)
 }
 
-//UpdateTaxRate will update an taxRate given an TaxRates struct
+//Update will update an taxRate given an TaxRates struct
 //This will only handle a single taxRate - you cannot update multiple taxRates in a single call
-func (t *TaxRates) UpdateTaxRate(provider *xero.Provider, session goth.Session) (*TaxRates, error) {
+func (t *TaxRates) Update(provider *xerogolang.Provider, session goth.Session) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -104,7 +105,7 @@ func (t *TaxRates) UpdateTaxRate(provider *xero.Provider, session goth.Session) 
 
 //FindTaxRates will get all TaxRates.
 //additional querystringParameters such as taxType, where and order can be added as a map
-func FindTaxRates(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*TaxRates, error) {
+func FindTaxRates(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

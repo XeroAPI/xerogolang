@@ -1,6 +1,6 @@
 package accounting
 
-//ContactPerson is a Contact Person
+//ContactPerson is a Contact Person against a Contact
 type ContactPerson struct {
 
 	// First name of person

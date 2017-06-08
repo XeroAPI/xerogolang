@@ -1,5 +1,6 @@
 package accounting
 
+//TaxComponent is a component of tax witjin a TaxRate
 type TaxComponent struct {
 
 	// Name of Tax Component

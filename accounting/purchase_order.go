@@ -3,11 +3,10 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strings"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -94,7 +93,7 @@ type PurchaseOrders struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (p *PurchaseOrders) convertPurchaseOrderDates() error {
+func (p *PurchaseOrders) convertDates() error {
 	var err error
 	for n := len(p.PurchaseOrders) - 1; n >= 0; n-- {
 		p.PurchaseOrders[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(p.PurchaseOrders[n].UpdatedDateUTC, true)
@@ -113,7 +112,7 @@ func unmarshalPurchaseOrder(purchaseOrderResponseBytes []byte) (*PurchaseOrders,
 		return nil, err
 	}
 
-	err = purchaseOrderResponse.convertPurchaseOrderDates()
+	err = purchaseOrderResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +120,8 @@ func unmarshalPurchaseOrder(purchaseOrderResponseBytes []byte) (*PurchaseOrders,
 	return purchaseOrderResponse, err
 }
 
-//CreatePurchaseOrder will create purchaseOrders given an PurchaseOrders struct
-func (p *PurchaseOrders) CreatePurchaseOrder(provider *xero.Provider, session goth.Session) (*PurchaseOrders, error) {
+//Create will create purchaseOrders given an PurchaseOrders struct
+func (p *PurchaseOrders) Create(provider *xerogolang.Provider, session goth.Session) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -141,9 +140,9 @@ func (p *PurchaseOrders) CreatePurchaseOrder(provider *xero.Provider, session go
 	return unmarshalPurchaseOrder(purchaseOrderResponseBytes)
 }
 
-//UpdatePurchaseOrder will update an purchaseOrder given an PurchaseOrders struct
+//Update will update an purchaseOrder given an PurchaseOrders struct
 //This will only handle single purchaseOrder - you cannot update multiple purchaseOrders in a single call
-func (p *PurchaseOrders) UpdatePurchaseOrder(provider *xero.Provider, session goth.Session) (*PurchaseOrders, error) {
+func (p *PurchaseOrders) Update(provider *xerogolang.Provider, session goth.Session) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -165,7 +164,7 @@ func (p *PurchaseOrders) UpdatePurchaseOrder(provider *xero.Provider, session go
 //FindPurchaseOrdersModifiedSince will get all PurchaseOrders modified after a specified date.
 //Paging is enforced by default. 100 purchase orders are returned per page.
 //additional querystringParameters such as page, order, status, DateFrom & DateTo can be added as a map
-func FindPurchaseOrdersModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*PurchaseOrders, error) {
+func FindPurchaseOrdersModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -184,12 +183,12 @@ func FindPurchaseOrdersModifiedSince(provider *xero.Provider, session goth.Sessi
 
 //FindPurchaseOrders will get all PurchaseOrders. Paging is enforced by default. 100 purchase orders are returned per page.
 //additional querystringParameters such as page, order, status, DateFrom & DateTo can be added as a map
-func FindPurchaseOrders(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*PurchaseOrders, error) {
+func FindPurchaseOrders(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*PurchaseOrders, error) {
 	return FindPurchaseOrdersModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindPurchaseOrder will get a single purchaseOrder - purchaseOrderID can be a GUID for an purchaseOrder or an purchaseOrder number
-func FindPurchaseOrder(provider *xero.Provider, session goth.Session, purchaseOrderID string) (*PurchaseOrders, error) {
+func FindPurchaseOrder(provider *xerogolang.Provider, session goth.Session, purchaseOrderID string) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -202,8 +201,8 @@ func FindPurchaseOrder(provider *xero.Provider, session goth.Session, purchaseOr
 	return unmarshalPurchaseOrder(purchaseOrderResponseBytes)
 }
 
-//CreateExamplePurchaseOrder Creates an Example purchaseOrder
-func CreateExamplePurchaseOrder() *PurchaseOrders {
+//GenerateExamplePurchaseOrder Creates an Example purchaseOrder
+func GenerateExamplePurchaseOrder(contactID string) *PurchaseOrders {
 	lineItem := LineItem{
 		Description: "Importing & Exporting Services",
 		Quantity:    1.00,
@@ -211,14 +210,11 @@ func CreateExamplePurchaseOrder() *PurchaseOrders {
 		AccountCode: "200",
 	}
 
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-
 	purchaseOrder := PurchaseOrder{
 		Contact: Contact{
-			ContactID: "2fba33a2-e133-40e0-9c18-85c68dff7714",
+			ContactID: contactID,
 		},
-		Date:            strings.TrimSuffix(today.Format(time.RFC3339), "Z"),
+		Date:            helpers.TodayRFC3339(),
 		LineAmountTypes: "Exclusive",
 		LineItems:       []LineItem{},
 	}

@@ -3,11 +3,10 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strings"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -88,7 +87,7 @@ type CreditNotes struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (c *CreditNotes) convertCreditNoteDates() error {
+func (c *CreditNotes) convertDates() error {
 	var err error
 	for n := len(c.CreditNotes) - 1; n >= 0; n-- {
 		c.CreditNotes[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(c.CreditNotes[n].UpdatedDateUTC, true)
@@ -107,7 +106,7 @@ func unmarshalCreditNote(creditNoteResponseBytes []byte) (*CreditNotes, error) {
 		return nil, err
 	}
 
-	err = creditNoteResponse.convertCreditNoteDates()
+	err = creditNoteResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +114,8 @@ func unmarshalCreditNote(creditNoteResponseBytes []byte) (*CreditNotes, error) {
 	return creditNoteResponse, err
 }
 
-//CreateCreditNote will create creditNotes given an CreditNotes struct
-func (c *CreditNotes) CreateCreditNote(provider *xero.Provider, session goth.Session) (*CreditNotes, error) {
+//Create will create creditNotes given an CreditNotes struct
+func (c *CreditNotes) Create(provider *xerogolang.Provider, session goth.Session) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -135,9 +134,9 @@ func (c *CreditNotes) CreateCreditNote(provider *xero.Provider, session goth.Ses
 	return unmarshalCreditNote(creditNoteResponseBytes)
 }
 
-//UpdateCreditNote will update an creditNote given an CreditNotes struct
+//Update will update an creditNote given an CreditNotes struct
 //This will only handle single creditNote - you cannot update multiple creditNotes in a single call
-func (c *CreditNotes) UpdateCreditNote(provider *xero.Provider, session goth.Session) (*CreditNotes, error) {
+func (c *CreditNotes) Update(provider *xerogolang.Provider, session goth.Session) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -156,11 +155,11 @@ func (c *CreditNotes) UpdateCreditNote(provider *xero.Provider, session goth.Ses
 	return unmarshalCreditNote(creditNoteResponseBytes)
 }
 
-//FindCreditNotesModifiedSinceWithParams will get all Credit Notes modified after a specified date.
+//FindCreditNotesModifiedSince will get all Credit Notes modified after a specified date.
 //These Credit Notes will not have details like line items by default.
 //If you need details then then add a 'page' querystringParameter and get 100 Credit Notes at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindCreditNotesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*CreditNotes, error) {
+func FindCreditNotesModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -180,12 +179,12 @@ func FindCreditNotesModifiedSince(provider *xero.Provider, session goth.Session,
 //FindCreditNotes will get all CreditNotes. These Credit Notes will not have details like line items by default.
 //If you need details then then add a 'page' querystringParameter and get 100 Credit Notes at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindCreditNotes(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*CreditNotes, error) {
+func FindCreditNotes(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*CreditNotes, error) {
 	return FindCreditNotesModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindCreditNote will get a single creditNote - creditNoteID can be a GUID for a creditNote or a creditNote number
-func FindCreditNote(provider *xero.Provider, session goth.Session, creditNoteID string) (*CreditNotes, error) {
+func FindCreditNote(provider *xerogolang.Provider, session goth.Session, creditNoteID string) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -207,15 +206,12 @@ func GenerateExampleCreditNote() *CreditNotes {
 		AccountCode: "200",
 	}
 
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-
 	creditNote := CreditNote{
 		Type: "ACCRECCREDIT",
 		Contact: Contact{
 			Name: "George Costanza",
 		},
-		Date:            strings.TrimSuffix(today.Format(time.RFC3339), "Z"),
+		Date:            helpers.TodayRFC3339(),
 		LineAmountTypes: "Exclusive",
 		LineItems:       []LineItem{},
 	}

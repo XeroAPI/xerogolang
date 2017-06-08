@@ -3,7 +3,7 @@ package accounting
 import (
 	"encoding/xml"
 
-	xero "github.com/TheRegan/Xero-Golang"
+	"github.com/TheRegan/xerogolang"
 	"github.com/markbates/goth"
 )
 
@@ -28,9 +28,9 @@ type Options struct {
 	Options []TrackingOption `json:"Options,omitempty" xml:"Option,omitempty"`
 }
 
-//AddTrackingOptions will add tracking options to the TrackingCategory Specified on the first option
+//Add will add tracking options to the TrackingCategory Specified on the first option
 //All options should belong to the same Tracking Category
-func (o *Options) AddTrackingOptions(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+func (o *Options) Add(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -49,8 +49,8 @@ func (o *Options) AddTrackingOptions(provider *xero.Provider, session goth.Sessi
 	return unmarshalTrackingCategory(trackingCategoryResponseBytes)
 }
 
-//UpdateTrackingOption will update a given tracking option
-func (t *TrackingOption) UpdateTrackingOption(provider *xero.Provider, session goth.Session) (*TrackingCategories, error) {
+//Update will update a given tracking option
+func (t *TrackingOption) Update(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",

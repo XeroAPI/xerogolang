@@ -1,5 +1,6 @@
 package accounting
 
+//Employee is for the deprecated Pay run feature.
 type Employee struct {
 
 	// The Xero identifier for an employee e.g. 297c2dc5-cc47-4afd-8ec8-74990b8761e9

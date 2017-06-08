@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -44,7 +44,7 @@ type Journals struct {
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (j *Journals) convertJournalDates() error {
+func (j *Journals) convertDates() error {
 	var err error
 	for n := len(j.Journals) - 1; n >= 0; n-- {
 		j.Journals[n].JournalDate, err = helpers.DotNetJSONTimeToRFC3339(j.Journals[n].JournalDate, false)
@@ -67,7 +67,7 @@ func unmarshalJournals(journalResponseBytes []byte) (*Journals, error) {
 		return nil, err
 	}
 
-	err = journalResponse.convertJournalDates()
+	err = journalResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func unmarshalJournals(journalResponseBytes []byte) (*Journals, error) {
 //Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
 //Journals are ordered oldest to newest.
 //additional querystringParameters such as offset and paymentsOnly can be added as a map
-func FindJournalsModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Journals, error) {
+func FindJournalsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Journals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -102,12 +102,12 @@ func FindJournalsModifiedSince(provider *xero.Provider, session goth.Session, mo
 //Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
 //Journals are ordered oldest to newest.
 //additional querystringParameters such as offset and paymentsOnly can be added as a map
-func FindJournals(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Journals, error) {
+func FindJournals(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Journals, error) {
 	return FindJournalsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindJournal will get a single journal - journalID can be a GUID for an journal or an journal number
-func FindJournal(provider *xero.Provider, session goth.Session, journalID string) (*Journals, error) {
+func FindJournal(provider *xerogolang.Provider, session goth.Session, journalID string) (*Journals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

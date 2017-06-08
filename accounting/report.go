@@ -4,35 +4,39 @@ import (
 	"encoding/json"
 	"strconv"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
+//Report is an organised set of financial information
 type Report struct {
-	ReportID     string    `json:"ReportID,omitempty" xml:"ReportID,omitempty"`
-	ReportName   string    `json:"ReportName,omitempty" xml:"ReportName,omitempty"`
-	ReportType   string    `json:"ReportType,omitempty" xml:"ReportType,omitempty"`
+	//The ID of the report
+	ReportID string `json:"ReportID,omitempty" xml:"ReportID,omitempty"`
+	//The Name of the report
+	ReportName string `json:"ReportName,omitempty" xml:"ReportName,omitempty"`
+	//The type of report
+	ReportType string `json:"ReportType,omitempty" xml:"ReportType,omitempty"`
+	//A collection of titles for the report
 	ReportTitles *[]string `json:"ReportTitles,omitempty" xml:"ReportTitles>ReportTitle,omitempty"`
-	ReportDate   string    `json:"ReportDate,omitempty" xml:"ReportDate,omitempty"`
+	//The date of the report
+	ReportDate string `json:"ReportDate,omitempty" xml:"ReportDate,omitempty"`
 	// Last modified date UTC format
-	UpdatedDateUTC string             `json:"UpdatedDateUTC,omitempty" xml:"UpdatedDateUTC,omitempty"`
-	Attributes     *[]ReportAttribute `json:"Attributes,omitempty" xml:"Attributes>Attribute,omitempty"`
-	Rows           *[]Row             `json:"Rows,omitempty" xml:"Rows>Row,omitempty"`
+	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"UpdatedDateUTC,omitempty"`
+	//Attributes of the report
+	Attributes *[]ReportAttribute `json:"Attributes,omitempty" xml:"Attributes>Attribute,omitempty"`
+	//Rows on the report that may contain cells, Attributes, or other rows
+	Rows *[]Row `json:"Rows,omitempty" xml:"Rows>Row,omitempty"`
 }
 
+//Reports is a collection of reports
 type Reports struct {
 	Reports []Report `json:"Reports" xml:"Report"`
 }
 
-//ReportTitle is a title on a report
-type ReportTitle struct {
-	ReportTitle string `json:"ReportTitle,omitempty" xml:"ReportTitle,omitempty"`
-}
-
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (r *Reports) convertReportDates() error {
+func (r *Reports) convertDates() error {
 	var err error
 	for n := len(r.Reports) - 1; n >= 0; n-- {
 		if r.Reports[n].UpdatedDateUTC != "" {
@@ -53,7 +57,7 @@ func unmarshalReport(reportResponseBytes []byte) (*Reports, error) {
 		return nil, err
 	}
 
-	err = reportResponse.convertReportDates()
+	err = reportResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +67,7 @@ func unmarshalReport(reportResponseBytes []byte) (*Reports, error) {
 
 //Run1099 will run the 1099 Report and marshal the results to a Report Struct
 //This Report will only work for US based Organisations
-func Run1099(provider *xero.Provider, session goth.Session, reportYear int) (*Reports, error) {
+func Run1099(provider *xerogolang.Provider, session goth.Session, reportYear int) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -82,7 +86,7 @@ func Run1099(provider *xero.Provider, session goth.Session, reportYear int) (*Re
 
 //RunAgedPayablesByContact will run the Aged Payables By Contact Report and marshal the results to a Report Struct
 //Date, FromDate and ToDate can be added as optional paramters as a map
-func RunAgedPayablesByContact(provider *xero.Provider, session goth.Session, contactID string, querystringParameters map[string]string) (*Reports, error) {
+func RunAgedPayablesByContact(provider *xerogolang.Provider, session goth.Session, contactID string, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -105,7 +109,7 @@ func RunAgedPayablesByContact(provider *xero.Provider, session goth.Session, con
 
 //RunAgedReceivablesByContact will run the Aged Receivables By Contact Report and marshal the results to a Report Struct
 //Date, FromDate and ToDate can be added as optional paramters as a map
-func RunAgedReceivablesByContact(provider *xero.Provider, session goth.Session, contactID string, querystringParameters map[string]string) (*Reports, error) {
+func RunAgedReceivablesByContact(provider *xerogolang.Provider, session goth.Session, contactID string, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -128,7 +132,7 @@ func RunAgedReceivablesByContact(provider *xero.Provider, session goth.Session, 
 
 //RunBalanceSheet will run the Balance Sheet Report and marshal the results to a Report Struct
 //date, trackingOptionID1, trackingOptionID2, standardLayout, and paymentsOnly can be added as optional paramters as a map
-func RunBalanceSheet(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
+func RunBalanceSheet(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -143,7 +147,7 @@ func RunBalanceSheet(provider *xero.Provider, session goth.Session, querystringP
 
 //RunBankStatement will run the Bank Statement Report and marshal the results to a Report Struct
 //FromDate and ToDate can be added as optional paramters as a map
-func RunBankStatement(provider *xero.Provider, session goth.Session, bankAccountID string, querystringParameters map[string]string) (*Reports, error) {
+func RunBankStatement(provider *xerogolang.Provider, session goth.Session, bankAccountID string, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -166,7 +170,7 @@ func RunBankStatement(provider *xero.Provider, session goth.Session, bankAccount
 
 //RunBankSummary will run the Bank Summary Report and marshal the results to a Report Struct
 //FromDate and ToDate can be added as optional paramters as a map
-func RunBankSummary(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
+func RunBankSummary(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -181,7 +185,7 @@ func RunBankSummary(provider *xero.Provider, session goth.Session, querystringPa
 
 //RunBASReport will retrieve an individual BAS Report given a reportID and marshal the results to a Report Struct
 //Will only work for AU based Organisations
-func RunBASReport(provider *xero.Provider, session goth.Session, reportID string) (*Reports, error) {
+func RunBASReport(provider *xerogolang.Provider, session goth.Session, reportID string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -196,12 +200,12 @@ func RunBASReport(provider *xero.Provider, session goth.Session, reportID string
 
 //RunBASReports will retrieve all BAS Reports and marshal the results to a Report Struct
 //Will only work for AU based Organisations
-func RunBASReports(provider *xero.Provider, session goth.Session) (*Reports, error) {
+func RunBASReports(provider *xerogolang.Provider, session goth.Session) (*Reports, error) {
 	return RunBASReport(provider, session, "")
 }
 
 //RunBudgetSummary will run the Budget Summary Report and marshal the results to a Report Struct
-func RunBudgetSummary(provider *xero.Provider, session goth.Session) (*Reports, error) {
+func RunBudgetSummary(provider *xerogolang.Provider, session goth.Session) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -216,7 +220,7 @@ func RunBudgetSummary(provider *xero.Provider, session goth.Session) (*Reports, 
 
 //RunExecutiveSummary will run the Executive Summary Report and marshal the results to a Report Struct
 //date can be added as an optional paramter as a map
-func RunExecutiveSummary(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
+func RunExecutiveSummary(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -231,7 +235,7 @@ func RunExecutiveSummary(provider *xero.Provider, session goth.Session, querystr
 
 //RunGSTReport will retrieve an individual GST Report given a reportID and marshal the results to a Report Struct
 //Will only work for NZ based Organisations
-func RunGSTReport(provider *xero.Provider, session goth.Session, reportID string) (*Reports, error) {
+func RunGSTReport(provider *xerogolang.Provider, session goth.Session, reportID string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -246,14 +250,14 @@ func RunGSTReport(provider *xero.Provider, session goth.Session, reportID string
 
 //RunGSTReports will retrieve all GST Reports and marshal the results to a Report Struct
 //Will only work for NZ based Organisations
-func RunGSTReports(provider *xero.Provider, session goth.Session) (*Reports, error) {
+func RunGSTReports(provider *xerogolang.Provider, session goth.Session) (*Reports, error) {
 	return RunGSTReport(provider, session, "")
 }
 
 //RunProfitAndLoss will run the Profit And Loss Report and marshal the results to a Report Struct
 //date, trackingCategoryID, trackingOptionID, trackingCategoryID2, trackingOptionID2,
 //standardLayout, and paymentsOnly can be added as optional paramters as a map
-func RunProfitAndLoss(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
+func RunProfitAndLoss(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -268,7 +272,7 @@ func RunProfitAndLoss(provider *xero.Provider, session goth.Session, querystring
 
 //RunTrialBalance will run the TrialBalance Report and marshal the results to a Report Struct
 //date and paymentsOnly can be added as optional paramters as a map
-func RunTrialBalance(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
+func RunTrialBalance(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

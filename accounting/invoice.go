@@ -3,11 +3,10 @@ package accounting
 import (
 	"encoding/json"
 	"encoding/xml"
-	"strings"
 	"time"
 
-	xero "github.com/TheRegan/Xero-Golang"
-	"github.com/TheRegan/Xero-Golang/helpers"
+	"github.com/TheRegan/xerogolang"
+	"github.com/TheRegan/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 
@@ -118,7 +117,7 @@ var (
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
 //We need to convert these to a more usable format - RFC3339 for consistency with what the API expects to recieve
-func (i *Invoices) convertInvoiceDates() error {
+func (i *Invoices) convertDates() error {
 	var err error
 	for n := len(i.Invoices) - 1; n >= 0; n-- {
 		i.Invoices[n].UpdatedDateUTC, err = helpers.DotNetJSONTimeToRFC3339(i.Invoices[n].UpdatedDateUTC, true)
@@ -137,7 +136,7 @@ func unmarshalInvoice(invoiceResponseBytes []byte) (*Invoices, error) {
 		return nil, err
 	}
 
-	err = invoiceResponse.convertInvoiceDates()
+	err = invoiceResponse.convertDates()
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +144,8 @@ func unmarshalInvoice(invoiceResponseBytes []byte) (*Invoices, error) {
 	return invoiceResponse, err
 }
 
-//CreateInvoice will create invoices given an Invoices struct
-func (i *Invoices) CreateInvoice(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+//Create will create invoices given an Invoices struct
+func (i *Invoices) Create(provider *xerogolang.Provider, session goth.Session) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -165,9 +164,9 @@ func (i *Invoices) CreateInvoice(provider *xero.Provider, session goth.Session) 
 	return unmarshalInvoice(invoiceResponseBytes)
 }
 
-//UpdateInvoice will update an invoice given an Invoices struct
+//Update will update an invoice given an Invoices struct
 //This will only handle single invoice - you cannot update multiple invoices in a single call
-func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) (*Invoices, error) {
+func (i *Invoices) Update(provider *xerogolang.Provider, session goth.Session) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -190,7 +189,7 @@ func (i *Invoices) UpdateInvoice(provider *xero.Provider, session goth.Session) 
 //These Invoices will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Invoices at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindInvoicesModifiedSince(provider *xero.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Invoices, error) {
+func FindInvoicesModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -210,12 +209,12 @@ func FindInvoicesModifiedSince(provider *xero.Provider, session goth.Session, mo
 //FindInvoices will get all Invoices. These Invoice will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Invoices at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindInvoices(provider *xero.Provider, session goth.Session, querystringParameters map[string]string) (*Invoices, error) {
+func FindInvoices(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Invoices, error) {
 	return FindInvoicesModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number
-func FindInvoice(provider *xero.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
+func FindInvoice(provider *xerogolang.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -228,8 +227,8 @@ func FindInvoice(provider *xero.Provider, session goth.Session, invoiceID string
 	return unmarshalInvoice(invoiceResponseBytes)
 }
 
-//CreateExampleInvoice Creates an Example invoice
-func CreateExampleInvoice() *Invoices {
+//GenerateExampleInvoice Creates an Example invoice
+func GenerateExampleInvoice() *Invoices {
 	lineItem := LineItem{
 		Description: "Importing & Exporting Services",
 		Quantity:    1.00,
@@ -237,16 +236,13 @@ func CreateExampleInvoice() *Invoices {
 		AccountCode: "200",
 	}
 
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-
 	invoice := Invoice{
 		Type: "ACCREC",
 		Contact: Contact{
 			Name: "George Costanza",
 		},
-		Date:            strings.TrimSuffix(today.Format(time.RFC3339), "Z"),
-		DueDate:         strings.TrimSuffix(today.Add(720*time.Hour).Format(time.RFC3339), "Z"),
+		Date:            helpers.TodayRFC3339(),
+		DueDate:         helpers.FormatDate(time.Now().Add(720 * time.Hour)),
 		LineAmountTypes: "Exclusive",
 		LineItems:       []LineItem{},
 	}
