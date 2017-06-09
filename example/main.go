@@ -35,6 +35,7 @@ var (
 	purchaseOrders     = new(accounting.PurchaseOrders)
 	trackingCategories = new(accounting.TrackingCategories)
 	taxRates           = new(accounting.TaxRates)
+	receipts           = new(accounting.Receipts)
 )
 
 func init() {
@@ -455,6 +456,25 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(userTemplate)
 		t.Execute(res, userCollection.Users[0])
+	case "expenseclaim":
+		expenseClaimCollection, err := accounting.FindExpenseClaim(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(expenseClaimTemplate)
+		t.Execute(res, expenseClaimCollection.ExpenseClaims[0])
+	case "receipt":
+		receiptCollection, err := accounting.FindReceipt(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		receipts = receiptCollection
+
+		t, _ := template.New("foo").Parse(receiptTemplate)
+		t.Execute(res, receiptCollection.Receipts[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -780,6 +800,44 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(usersTemplate)
 		t.Execute(res, userCollection.Users)
+	case "expenseclaims":
+		expenseClaimCollection := new(accounting.ExpenseClaims)
+		var err error
+		if modifiedSince == "" {
+			expenseClaimCollection, err = accounting.FindExpenseClaims(provider, session, nil)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			expenseClaimCollection, err = accounting.FindExpenseClaimsModifiedSince(provider, session, parsedTime, nil)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(expenseClaimsTemplate)
+		t.Execute(res, expenseClaimCollection.ExpenseClaims)
+	case "receipts":
+		receiptCollection := new(accounting.Receipts)
+		var err error
+		if modifiedSince == "" {
+			receiptCollection, err = accounting.FindReceipts(provider, session, nil)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			receiptCollection, err = accounting.FindReceiptsModifiedSince(provider, session, parsedTime, nil)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(receiptsTemplate)
+		t.Execute(res, receiptCollection.Receipts)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -1337,6 +1395,24 @@ func updateHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(taxRateTemplate)
 		t.Execute(res, taxRateCollection.TaxRates[0])
+	case "receipt":
+		if id != receipts.Receipts[0].ReceiptID {
+			fmt.Fprintln(res, "Could not update Receipt")
+			return
+		}
+		if receipts.Receipts[0].Reference == "1111" || receipts.Receipts[0].Reference == "" {
+			receipts.Receipts[0].Reference = "2222"
+		} else if receipts.Receipts[0].Reference == "2222" {
+			receipts.Receipts[0].Reference = "1111"
+		}
+
+		receiptCollection, err := receipts.Update(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(receiptTemplate)
+		t.Execute(res, receiptCollection.Receipts[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return

@@ -68,6 +68,10 @@ var indexConnectedTemplate = `
 <p><a href="/findall/linkedtransactions/2?provider=xero">find the next 100 linkedtransactions</a></p>
 <p><a href="/findall/users?provider=xero">find all users</a></p>
 <p><a href="/findall/users?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all users changed since 1 May 2017</a></p>
+<p><a href="/findall/expenseclaims?provider=xero">find all expense claims</a></p>
+<p><a href="/findall/expenseclaims?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all expense claims changed since 1 May 2017</a></p>
+<p><a href="/findall/receipts?provider=xero">find all receipts</a></p>
+<p><a href="/findall/receipts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all receipts changed since 1 May 2017</a></p>
 `
 
 var connectTemplate = `
@@ -135,6 +139,10 @@ var connectTemplate = `
 <p><a href="/findall/linkedtransactions/2?provider=xero">find the next 100 linkedtransactions</a></p>
 <p><a href="/findall/users?provider=xero">find all users</a></p>
 <p><a href="/findall/users?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all users changed since 1 May 2017</a></p>
+<p><a href="/findall/expenseclaims?provider=xero">find all expense claims</a></p>
+<p><a href="/findall/expenseclaims?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all expense claims changed since 1 May 2017</a></p>
+<p><a href="/findall/receipts?provider=xero">find all receipts</a></p>
+<p><a href="/findall/receipts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all receipts changed since 1 May 2017</a></p>
 `
 
 var invoiceTemplate = `
@@ -735,7 +743,7 @@ var linkedTransactionsTemplate = `
 <p>TargetLineItemID: {{.TargetLineItemID}}</p>
 <p>Status: {{.Status}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
-<p><a href="/find/linkedtransaction/{{.LinkedTransactionID}}?provider=xero">See details of this linkedtransaction</a></p>
+<p><a href="/find/linkedtransaction/{{.LinkedTransactionID}}?provider=xero">See details of this linked transaction</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
@@ -761,7 +769,78 @@ var usersTemplate = `
 <p>IsSubscriber: {{.IsSubscriber}}</p>
 <p>OrganisationRole: {{.OrganisationRole}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
-<p><a href="/find/user/{{.UserID}}?provider=xero">See details of this User</a></p>
+<p><a href="/find/user/{{.UserID}}?provider=xero">See details of this user</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var expenseClaimTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.ExpenseClaimID}}</p>
+<p>User: {{.User.UserID}}</p>
+<p>FirstName: {{.User.FirstName}}</p>
+<p>LastName: {{.User.LastName}}</p>
+{{if .Receipts}}
+<p>Receipts: </p>
+{{range .Receipts}}
+     <p>--  ID: {{.ReceiptID}}   |   Number:  {{.ReceiptNumber}}   |   Total:  {{.Total}}</p>
+{{end}}
+{{else}}
+     <p>No Tax Receipts were found</p>
+{{end}}
+<p>AmountDue: {{.AmountDue}}</p>
+<p>AmountPaid: {{.AmountPaid}}</p>
+<p>Total: {{.Total}}</p>
+`
+
+var expenseClaimsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.ExpenseClaimID}}</p>
+<p>User: {{.User.UserID}}</p>
+<p>FirstName: {{.User.FirstName}}</p>
+<p>LastName: {{.User.LastName}}</p>
+<p>AmountDue: {{.AmountDue}}</p>
+<p>AmountPaid: {{.AmountPaid}}</p>
+<p>Total: {{.Total}}</p>
+<p><a href="/find/expenseclaim/{{.ExpenseClaimID}}?provider=xero">See details of this expense claim</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var receiptTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.ReceiptID}}</p>
+<p>Receipt Number: {{.ReceiptNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+{{if .LineItems}}
+<p>LineItems: </p>
+{{range .LineItems}}
+	<p>--  Description:{{.Description}}  |  Quantity:{{.Quantity}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>Total: {{.Total}}</p>
+<p>Reference: {{.Reference}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/update/receipt/{{.ReceiptID}}?provider=xero">update reference of this receipt</a></p>
+`
+
+var receiptsTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.ReceiptID}}</p>
+<p>Receipt Number: {{.ReceiptNumber}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Status: {{.Status}}</p>
+<p>Total: {{.Total}}</p>
+<p>Reference: {{.Reference}}</p>
+<p>UpdatedDate: {{.UpdatedDateUTC}}</p>
+<p><a href="/find/receipt/{{.ReceiptID}}?provider=xero">See details of this receipt</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
