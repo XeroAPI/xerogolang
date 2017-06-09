@@ -475,6 +475,15 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(receiptTemplate)
 		t.Execute(res, receiptCollection.Receipts[0])
+	case "repeatinginvoice":
+		repeatingInvoiceCollection, err := accounting.FindRepeatingInvoice(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(repeatingInvoiceTemplate)
+		t.Execute(res, repeatingInvoiceCollection.RepeatingInvoices[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -838,6 +847,14 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(receiptsTemplate)
 		t.Execute(res, receiptCollection.Receipts)
+	case "repeatinginvoices":
+		repeatingInvoiceCollection, err := accounting.FindRepeatingInvoices(provider, session, nil)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(repeatingInvoicesTemplate)
+		t.Execute(res, repeatingInvoiceCollection.RepeatingInvoices)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return

@@ -43,6 +43,10 @@ func getTimestampAndOffset(regex *regexp.Regexp, timeString string) (int64, int6
 
 //DotNetJSONTimeToRFC3339 Converts the .Net formatted time returned by the Xero API to a more readable format
 func DotNetJSONTimeToRFC3339(jsonTime string, isUTC bool) (string, error) {
+	//If jsonTime is empty we don't need to convert anything
+	if jsonTime == "" {
+		return "", nil
+	}
 	//The format returned looks like: /Date(1494201600000+0000)/
 	//so first we need to strip out the unnecessary /'s, brackets, and letters
 	numbersAndPlusSymbol := regexp.MustCompile("[0-9+-]")
@@ -61,7 +65,7 @@ func DotNetJSONTimeToRFC3339(jsonTime string, isUTC bool) (string, error) {
 		golangTime = time.Unix((timestamp/1000)+offset, 0)
 	} else
 	//if the offset (the bit after the Unix timestamp) is negative (signalled by a - symbol)
-	//then we need to subrtract it from the timestamp and return the result
+	//then we need to subtract it from the timestamp and return the result
 	if strings.Contains(jsonTimeString, "-") {
 		minusSymbol := regexp.MustCompile("\\-")
 		timestamp, offset, err := getTimestampAndOffset(minusSymbol, jsonTimeString)

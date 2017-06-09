@@ -72,6 +72,7 @@ var indexConnectedTemplate = `
 <p><a href="/findall/expenseclaims?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all expense claims changed since 1 May 2017</a></p>
 <p><a href="/findall/receipts?provider=xero">find all receipts</a></p>
 <p><a href="/findall/receipts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all receipts changed since 1 May 2017</a></p>
+<p><a href="/findall/repeatinginvoices?provider=xero">find all repeating invoices</a></p>
 `
 
 var connectTemplate = `
@@ -143,6 +144,7 @@ var connectTemplate = `
 <p><a href="/findall/expenseclaims?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all expense claims changed since 1 May 2017</a></p>
 <p><a href="/findall/receipts?provider=xero">find all receipts</a></p>
 <p><a href="/findall/receipts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all receipts changed since 1 May 2017</a></p>
+<p><a href="/findall/repeatinginvoices?provider=xero">find all repeating invoices</a></p>
 `
 
 var invoiceTemplate = `
@@ -841,6 +843,40 @@ var receiptsTemplate = `
 <p>Reference: {{.Reference}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/find/receipt/{{.ReceiptID}}?provider=xero">See details of this receipt</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var repeatingInvoiceTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.RepeatingInvoiceID}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Status: {{.Status}}</p>
+{{if .LineItems}}
+<p>LineItems: </p>
+{{range .LineItems}}
+	<p>--  Description:{{.Description}}  |  Quantity:{{.Quantity}}  |  LineTotal:{{.LineAmount}}</p>
+{{end}}
+{{else}}
+	<p>No line items were found</p>
+{{end}}
+<p>Total: {{.Total}}</p>
+<p>StartDate: {{.Schedule.StartDate}}</p>
+<p>EndDate: {{.Schedule.EndDate}}</p>
+<p>NextScheduledDate: {{.Schedule.NextScheduledDate}}</p>
+`
+
+var repeatingInvoicesTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.RepeatingInvoiceID}}</p>
+<p>Contact: {{.Contact.Name}}</p>
+<p>Status: {{.Status}}</p>
+<p>Total: {{.Total}}</p>
+<p>StartDate: {{.Schedule.StartDate}}</p>
+<p>EndDate: {{.Schedule.EndDate}}</p>
+<p>NextScheduledDate: {{.Schedule.NextScheduledDate}}</p>
+<p><a href="/find/repeatinginvoice/{{.RepeatingInvoiceID}}?provider=xero">See details of this repeating invoice</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `
