@@ -73,6 +73,9 @@ var indexConnectedTemplate = `
 <p><a href="/findall/receipts?provider=xero">find all receipts</a></p>
 <p><a href="/findall/receipts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all receipts changed since 1 May 2017</a></p>
 <p><a href="/findall/repeatinginvoices?provider=xero">find all repeating invoices</a></p>
+<p><a href="/create/banktransfer?provider=xero">create bank transfer</a></p>
+<p><a href="/findall/banktransfers?provider=xero">find all bank transfers</a></p>
+<p><a href="/findall/banktransfers?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transfers changed since 1 May 2017</a></p>
 `
 
 var connectTemplate = `
@@ -145,6 +148,9 @@ var connectTemplate = `
 <p><a href="/findall/receipts?provider=xero">find all receipts</a></p>
 <p><a href="/findall/receipts?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all receipts changed since 1 May 2017</a></p>
 <p><a href="/findall/repeatinginvoices?provider=xero">find all repeating invoices</a></p>
+<p><a href="/create/banktransfer?provider=xero">create bank transfer</a></p>
+<p><a href="/findall/banktransfers?provider=xero">find all bank transfers</a></p>
+<p><a href="/findall/banktransfers?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transfers changed since 1 May 2017</a></p>
 `
 
 var invoiceTemplate = `
@@ -877,6 +883,33 @@ var repeatingInvoicesTemplate = `
 <p>EndDate: {{.Schedule.EndDate}}</p>
 <p>NextScheduledDate: {{.Schedule.NextScheduledDate}}</p>
 <p><a href="/find/repeatinginvoice/{{.RepeatingInvoiceID}}?provider=xero">See details of this repeating invoice</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+var bankTransferTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.BankTransferID}}</p>
+<p>FromBankAccount: {{.FromBankAccount.Name}}</p>
+<p>ToBankAccount: {{.ToBankAccount.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Amount: {{.Amount}}</p>
+<p>CurrencyRate: {{.CurrencyRate}}</p>
+<p>CreatedDate: {{.CreatedDateUTC}}</p>
+<p><a href="/find/banktransaction/{{.FromBankTransactionID}}?provider=xero">See from bank transaction</a></p>
+<p><a href="/find/banktransaction/{{.ToBankTransactionID}}?provider=xero">See to bank transaction</a></p>
+`
+
+var bankTransfersTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.BankTransferID}}</p>
+<p>FromBankAccount: {{.FromBankAccount.Name}}</p>
+<p>ToBankAccount: {{.ToBankAccount.Name}}</p>
+<p>Date: {{.Date}}</p>
+<p>Amount: {{.Amount}}</p>
+<p>CurrencyRate: {{.CurrencyRate}}</p>
+<p>CreatedDate: {{.CreatedDateUTC}}</p>
+<p><a href="/find/banktransfer/{{.BankTransferID}}?provider=xero">See details of this bank transfer</a></p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `

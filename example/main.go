@@ -36,6 +36,7 @@ var (
 	trackingCategories = new(accounting.TrackingCategories)
 	taxRates           = new(accounting.TaxRates)
 	receipts           = new(accounting.Receipts)
+	bankTransfers      = new(accounting.BankTransfers)
 )
 
 func init() {
@@ -205,6 +206,16 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 		taxRates = taxRateCollection
 		t, _ := template.New("foo").Parse(taxRateTemplate)
 		t.Execute(res, taxRateCollection.TaxRates[0])
+	case "banktransfer":
+		bankTransfers = accounting.GenerateExampleBankTransfer()
+		bankTransferCollection, err := bankTransfers.Create(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		bankTransfers = bankTransferCollection
+		t, _ := template.New("foo").Parse(bankTransferTemplate)
+		t.Execute(res, bankTransferCollection.BankTransfers[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -484,6 +495,16 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 
 		t, _ := template.New("foo").Parse(repeatingInvoiceTemplate)
 		t.Execute(res, repeatingInvoiceCollection.RepeatingInvoices[0])
+	case "banktransfer":
+		bankTransferCollection, err := accounting.FindBankTransfer(provider, session, id)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		bankTransfers = bankTransferCollection
+
+		t, _ := template.New("foo").Parse(bankTransferTemplate)
+		t.Execute(res, bankTransferCollection.BankTransfers[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
@@ -855,6 +876,25 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(repeatingInvoicesTemplate)
 		t.Execute(res, repeatingInvoiceCollection.RepeatingInvoices)
+	case "banktransfers":
+		bankTransferCollection := new(accounting.BankTransfers)
+		var err error
+		if modifiedSince == "" {
+			bankTransferCollection, err = accounting.FindBankTransfers(provider, session, nil)
+		} else {
+			parsedTime, parseError := time.Parse(time.RFC3339, modifiedSince)
+			if parseError != nil {
+				fmt.Fprintln(res, parseError)
+				return
+			}
+			bankTransferCollection, err = accounting.FindBankTransfersModifiedSince(provider, session, parsedTime, nil)
+		}
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+		t, _ := template.New("foo").Parse(bankTransfersTemplate)
+		t.Execute(res, bankTransferCollection.BankTransfers)
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return

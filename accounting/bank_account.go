@@ -1,5 +1,6 @@
 package accounting
 
+//BankAccount is an element on a BankTransfer - it is not to be used alone and has no methods
 type BankAccount struct {
 
 	// The Account Code of the Bank Account
