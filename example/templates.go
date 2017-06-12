@@ -76,6 +76,7 @@ var indexConnectedTemplate = `
 <p><a href="/create/banktransfer?provider=xero">create bank transfer</a></p>
 <p><a href="/findall/banktransfers?provider=xero">find all bank transfers</a></p>
 <p><a href="/findall/banktransfers?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transfers changed since 1 May 2017</a></p>
+<p><a href="/findall/brandingthemes?provider=xero">find all branding themes</a></p>
 `
 
 var connectTemplate = `
@@ -151,6 +152,7 @@ var connectTemplate = `
 <p><a href="/create/banktransfer?provider=xero">create bank transfer</a></p>
 <p><a href="/findall/banktransfers?provider=xero">find all bank transfers</a></p>
 <p><a href="/findall/banktransfers?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transfers changed since 1 May 2017</a></p>
+<p><a href="/findall/brandingthemes?provider=xero">find all branding themes</a></p>
 `
 
 var invoiceTemplate = `
@@ -910,6 +912,17 @@ var bankTransfersTemplate = `
 <p>CurrencyRate: {{.CurrencyRate}}</p>
 <p>CreatedDate: {{.CreatedDateUTC}}</p>
 <p><a href="/find/banktransfer/{{.BankTransferID}}?provider=xero">See details of this bank transfer</a></p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
+var brandingThemesTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>ID: {{.BrandingThemeID}}</p>
+<p>Name: {{.Name}}</p>
+<p>SortOrder: {{.SortOrder}}</p>
+<p>CreatedDate: {{.CreatedDateUTC}}</p>
 <p>-----------------------------------------------------</p>
 {{end}}
 `

@@ -82,7 +82,7 @@ func unmarshalBankTransfer(bankTransferResponseBytes []byte) (*BankTransfers, er
 	return bankTransferResponse, err
 }
 
-//Create will create bankTransfers given an BankTransfers struct
+//Create will create bankTransfers given a BankTransfers struct
 func (b *BankTransfers) Create(provider *xerogolang.Provider, session goth.Session) (*BankTransfers, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
@@ -105,7 +105,7 @@ func (b *BankTransfers) Create(provider *xerogolang.Provider, session goth.Sessi
 //FindBankTransfersModifiedSince will get all BankTransfers modified after a specified date.
 //These BankTransfers will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 BankTransfers at a time
-//additional querystringParameters such as where, page, order can be added as a map
+//additional querystringParameters such as where and order can be added as a map
 func FindBankTransfersModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransfers, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
@@ -125,7 +125,7 @@ func FindBankTransfersModifiedSince(provider *xerogolang.Provider, session goth.
 
 //FindBankTransfers will get all BankTransfers. These BankTransfer will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 BankTransfers at a time
-//additional querystringParameters such as where, page, order can be added as a map
+//additional querystringParameters such as where and order can be added as a map
 func FindBankTransfers(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransfers, error) {
 	return FindBankTransfersModifiedSince(provider, session, dayZero, querystringParameters)
 }
