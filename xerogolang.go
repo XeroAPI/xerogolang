@@ -166,8 +166,8 @@ func (p *Provider) BeginAuth(state string) (goth.Session, error) {
 	return session, nil
 }
 
-//ProcessRequest processes a request prior to it being sent to the API
-func (p *Provider) ProcessRequest(request *http.Request, session goth.Session, additionalHeaders map[string]string) ([]byte, error) {
+//processRequest processes a request prior to it being sent to the API
+func (p *Provider) processRequest(request *http.Request, session goth.Session, additionalHeaders map[string]string) ([]byte, error) {
 	sess := session.(*Session)
 
 	if sess.AccessToken == nil {
@@ -194,10 +194,8 @@ func (p *Provider) ProcessRequest(request *http.Request, session goth.Session, a
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
-			"%s responded with a %d trying to find information.\n\nRequest:\n%s\n\nResponse:\n%s",
-			p.providerName,
+			"%d error trying to find information.\n\nResponse:\n%s",
 			response.StatusCode,
-			helpers.ReaderToString(request.Body),
 			helpers.ReaderToString(response.Body),
 		)
 	}
@@ -229,7 +227,7 @@ func (p *Provider) Find(session goth.Session, endpoint string, additionalHeaders
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session, additionalHeaders)
+	return p.processRequest(request, session, additionalHeaders)
 }
 
 //Create sends data to an endpoint and returns a response to be unmarshaled into the appropriate data type
@@ -241,7 +239,7 @@ func (p *Provider) Create(session goth.Session, endpoint string, additionalHeade
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session, additionalHeaders)
+	return p.processRequest(request, session, additionalHeaders)
 }
 
 //Update sends data to an endpoint and returns a response to be unmarshaled into the appropriate data type
@@ -253,7 +251,7 @@ func (p *Provider) Update(session goth.Session, endpoint string, additionalHeade
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session, additionalHeaders)
+	return p.processRequest(request, session, additionalHeaders)
 }
 
 //Remove deletes the specified data from an endpoint
@@ -263,7 +261,7 @@ func (p *Provider) Remove(session goth.Session, endpoint string, additionalHeade
 		return nil, err
 	}
 
-	return p.ProcessRequest(request, session, additionalHeaders)
+	return p.processRequest(request, session, additionalHeaders)
 }
 
 //Organisation is the expected response from the Organisation endpoint - this is not a complete schema
