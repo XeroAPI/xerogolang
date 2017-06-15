@@ -1,5 +1,8 @@
-# xerogolang
-This is the Xero Golang SDK for the Xero API. Currently it only supports the Accounting API.
+# xerogolang (alpha)
+This is the Xero Golang SDK for the [Xero API](https://developer.xero.com/).
+
+Currently it only supports the Accounting API.
+
 
 ### Xero App
 You'll need to decide which type of Xero app you'll be building [Private](http://developer.xero.com/documentation/auth-and-limits/private-applications/), [Public](http://developer.xero.com/documentation/auth-and-limits/public-applications/), or [Partner](http://developer.xero.com/documentation/auth-and-limits/partner-applications/). Go to [http://app.xero.com](http://app.xero.com) and login with your Xero user account to create an app.
@@ -49,6 +52,88 @@ The example app uses a filesystem store for sessions - you will need to implemen
 **Data Endpoints**
 
 The Xero Golang SDK contains the Accounting package which has helper methods to perform (Create, Find, Update and Remove) actions on each endpoints and structs of each endpoint's response.  If an endpoint does not have one of the methods then that method is not available on the endpoint. E.g. Branding Themes can only use Find methods because you cannot Create, Update, or Remove them via the API.
+
+####Create
+Create can be called on structs that have been populated with data:
+```go
+c := &Contacts{
+  Contacts: []Contact{
+    Contact{
+      Name: "Cosmo Kramer",
+    },
+  },
+}
+r, err := c.Create(provider, session)
+```
+
+####Find
+Find is called either to get a single entity given an id:
+```go
+i, err := accounting.FindInvoice(provider, session, id)
+```
+all entities from an endpoint:
+```go
+i, err = accounting.FindInvoices(provider, session, nil)
+```
+all entities from an endpoint since a specific time:
+```go
+i, err = accounting.FindInvoicesModifiedSince(provider, session, time.Now().Add(-24*time.Hour), nil)
+```
+all entities from an endpoint using paging:
+```go
+querystringParameters := map[string]string{
+  "page": 1,
+}
+
+i, err = accounting.FindInvoices(provider, session, querystringParameters)
+```
+all entities from an endpoint that match a given where clause:
+```go
+querystringParameters := map[string]string{
+  "where": "Contact.Name==\"Vanderlay Industries\"",
+}
+
+i, err = accounting.FindInvoices(provider, session, querystringParameters)
+```
+all entities from an endpoint in a particular order:
+```go
+querystringParameters := map[string]string{
+  "order": "DueDate",
+}
+
+i, err = accounting.FindInvoices(provider, session, querystringParameters)
+```
+all entities from an endpoint using a filter:
+```go
+querystringParameters := map[string]string{
+  "Statuses": "DRAFT,SUBMITTED",
+}
+
+i, err = accounting.FindInvoices(provider, session, querystringParameters)
+```
+a combination of all of the above:
+```go
+querystringParameters := map[string]string{
+  "page": 1,
+  "where": "Contact.Name==\"Vanderlay Industries\"",
+  "order": "DueDate",
+  "Statuses": "DRAFT,SUBMITTED",
+}
+
+i, err = accounting.FindInvoicesModifiedSince(provider, session, time.Now().Add(-24*time.Hour), querystringParameters)
+```
+
+####Update
+Update can be called on a struct containing the data to update.  You can only update one entity at a time though.
+```go
+a, err := accounts.Update(provider, session)
+```
+
+####Remove
+Remove can be called to remove an entity if you provide an ID - it is not provided on all endpoints though.
+```go
+t, err := RemoveTrackingCategory(provider, session, "trackingCategoryID")
+```
 
 ## Acknowledgement
 
