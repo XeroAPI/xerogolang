@@ -53,7 +53,7 @@ The example app uses a filesystem store for sessions - you will need to implemen
 
 The Xero Golang SDK contains the Accounting package which has helper methods to perform (Create, Find, Update and Remove) actions on each endpoints and structs of each endpoint's response.  If an endpoint does not have one of the methods then that method is not available on the endpoint. E.g. Branding Themes can only use Find methods because you cannot Create, Update, or Remove them via the API.
 
-####Create
+#### Create
 Create can be called on structs that have been populated with data:
 ```go
 c := &Contacts{
@@ -66,7 +66,7 @@ c := &Contacts{
 r, err := c.Create(provider, session)
 ```
 
-####Find
+#### Find
 Find is called either to get a single entity given an id:
 ```go
 i, err := accounting.FindInvoice(provider, session, id)
@@ -123,13 +123,13 @@ querystringParameters := map[string]string{
 i, err = accounting.FindInvoicesModifiedSince(provider, session, time.Now().Add(-24*time.Hour), querystringParameters)
 ```
 
-####Update
+#### Update
 Update can be called on a struct containing the data to update.  You can only update one entity at a time though.
 ```go
 a, err := accounts.Update(provider, session)
 ```
 
-####Remove
+#### Remove
 Remove can be called to remove an entity if you provide an ID - it is not provided on all endpoints though.
 ```go
 t, err := RemoveTrackingCategory(provider, session, "trackingCategoryID")
