@@ -39,10 +39,10 @@ This repo includes an Example App mentioned above.  The app contains examples of
 
 To run the example app do the following:
 ```text
-$ cd xerogolang/examples
+$ cd xerogolang/example
 $ go get -v
 $ go build
-$ ./examples
+$ ./example
 ```
 Now open up your browser and go to [http://localhost:3000](http://localhost:3000) to see the example.
 
