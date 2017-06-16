@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/TheRegan/xerogolang"
-	"github.com/TheRegan/xerogolang/helpers"
+	"github.com/XeroAPI/xerogolang"
+	"github.com/XeroAPI/xerogolang/helpers"
 	"github.com/markbates/goth"
 )
 

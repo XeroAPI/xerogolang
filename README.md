@@ -10,7 +10,7 @@ You'll need to decide which type of Xero app you'll be building [Private](http:/
 ### Download Xero Golang SDK
 Download the SDK using the following command:
 ```text
-$ go get github.com/TheRegan/xerogolang
+$ go get github.com/XeroAPI/xerogolang
 ```
 
 

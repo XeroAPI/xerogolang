@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TheRegan/xerogolang/helpers"
+	"github.com/XeroAPI/xerogolang/helpers"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/mrjones/oauth"
