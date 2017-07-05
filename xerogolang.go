@@ -20,6 +20,7 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/mrjones/oauth"
 	"golang.org/x/oauth2"
+	"crypto"
 )
 
 var (
@@ -49,14 +50,29 @@ type Provider struct {
 
 //newPublicConsumer creates a consumer capable of communicating with a Public application: https://developer.xero.com/documentation/auth-and-limits/public-applications
 func (p *Provider) newPublicConsumer(authURL string) *oauth.Consumer {
-	c := oauth.NewConsumer(
-		p.ClientKey,
-		p.Secret,
-		oauth.ServiceProvider{
-			RequestTokenUrl:   requestURL,
-			AuthorizeTokenUrl: authURL,
-			AccessTokenUrl:    tokenURL},
-	)
+
+	var c *oauth.Consumer
+
+	if p.HTTPClient != nil{
+		c = oauth.NewCustomHttpClientConsumer(
+			p.ClientKey,
+			p.Secret,
+			oauth.ServiceProvider{
+				RequestTokenUrl:   requestURL,
+				AuthorizeTokenUrl: authURL,
+				AccessTokenUrl:    tokenURL},
+			p.HTTPClient,
+		)
+	} else {
+		c = oauth.NewConsumer(
+			p.ClientKey,
+			p.Secret,
+			oauth.ServiceProvider{
+				RequestTokenUrl:   requestURL,
+				AuthorizeTokenUrl: authURL,
+				AccessTokenUrl:    tokenURL},
+		)
+	}
 
 	c.Debug(p.debug)
 
@@ -76,14 +92,30 @@ func (p *Provider) newPrivateOrPartnerConsumer(authURL string) *oauth.Consumer {
 	if err != nil {
 		log.Fatal(err)
 	}
-	c := oauth.NewRSAConsumer(
-		p.ClientKey,
-		privateKey,
-		oauth.ServiceProvider{
-			RequestTokenUrl:   requestURL,
-			AuthorizeTokenUrl: authURL,
-			AccessTokenUrl:    tokenURL},
-	)
+
+	var c *oauth.Consumer
+
+	if p.HTTPClient != nil{
+		c = oauth.NewCustomRSAConsumer(
+			p.ClientKey,
+			privateKey,
+			crypto.SHA1,
+			oauth.ServiceProvider{
+				RequestTokenUrl:   requestURL,
+				AuthorizeTokenUrl: authURL,
+				AccessTokenUrl:    tokenURL},
+			p.HTTPClient,
+		)
+	} else {
+		c = oauth.NewRSAConsumer(
+			p.ClientKey,
+			privateKey,
+			oauth.ServiceProvider{
+				RequestTokenUrl:   requestURL,
+				AuthorizeTokenUrl: authURL,
+				AccessTokenUrl:    tokenURL},
+		)
+	}
 
 	c.Debug(p.debug)
 
@@ -104,6 +136,31 @@ func New(clientKey, secret, callbackURL string) *Provider {
 		//More details here: https://developer.xero.com/documentation/getting-started/api-application-types
 		Method:       os.Getenv("XERO_METHOD"),
 		providerName: "xero",
+	}
+
+	switch p.Method {
+	case "private":
+		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
+	case "public":
+		p.consumer = p.newPublicConsumer(authorizeURL)
+	case "partner":
+		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
+	default:
+		p.consumer = p.newPublicConsumer(authorizeURL)
+	}
+	return p
+}
+
+// New creates a new Xero provider, with a custom http client
+func NewCustomHTTPClient(clientKey, secret, callbackURL string, httpClient *http.Client) *Provider {
+	p := &Provider{
+		ClientKey:   clientKey,
+		Secret:      secret,
+		CallbackURL: callbackURL,
+
+		Method:       os.Getenv("XERO_METHOD"),
+		providerName: "xero",
+		HTTPClient:	  httpClient,
 	}
 
 	switch p.Method {
@@ -180,12 +237,27 @@ func (p *Provider) processRequest(request *http.Request, session goth.Session, a
 		request.Header.Add(key, value)
 	}
 
-	client, err := p.consumer.MakeHttpClient(sess.AccessToken)
-	if err != nil {
-		return nil, err
+
+	var err error
+	var response *http.Response
+
+	if p.HTTPClient == nil {
+
+		client, err := p.consumer.MakeHttpClient(sess.AccessToken)
+
+		if err != nil {
+			return nil, err
+		}
+
+		response, err = client.Do(request)
+
+	} else {
+
+		transport, _ := p.consumer.MakeRoundTripper(sess.AccessToken)
+
+		response, err = transport.RoundTrip(request)
 	}
 
-	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
