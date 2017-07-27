@@ -1,4 +1,7 @@
 # xerogolang (alpha)
+
+[![GoDoc](https://godoc.org/github.com/XeroAPI/xerogolang?status.png)](https://godoc.org/github.com/XeroAPI/xerogolang)
+
 This is the Xero Golang SDK for the [Xero API](https://developer.xero.com/).
 
 Currently it only supports the Accounting API.
