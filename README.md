@@ -26,6 +26,8 @@ XERO_KEY=Your_Consumer_Key
 XERO_SECRET=Your_Consumer_Secret
 XERO_USER_AGENT=Your_application_name
 ```
+Find the Consumer_Key and Consumer_Secret you want to use at developer.xero.com under My Apps > Select App > OAuth Credentials.
+
 You must also set a method - this must be either ["public"](http://developer.xero.com/documentation/auth-and-limits/public-applications/), ["private"](http://developer.xero.com/documentation/auth-and-limits/private-applications/), or ["partner"](http://developer.xero.com/documentation/auth-and-limits/partner-applications/)
 ```text
 XERO_METHOD=public_private_or_partner
