@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -106,4 +108,16 @@ func TodayRFC3339() string {
 func FormatDate(date time.Time) string {
 	d := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	return strings.TrimSuffix(d.Format(time.RFC3339), "Z")
+}
+
+func ReadPrivateKeyFromPath(privateKeyFilePath string) string {
+	if privateKeyFilePath == "" {
+		return ""
+	}
+
+	privateKeyFileContents, err := ioutil.ReadFile(privateKeyFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(privateKeyFileContents)
 }

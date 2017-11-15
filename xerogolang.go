@@ -15,12 +15,13 @@ import (
 	"strings"
 	"time"
 
+	"crypto"
+
 	"github.com/XeroAPI/xerogolang/helpers"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/mrjones/oauth"
 	"golang.org/x/oauth2"
-	"crypto"
 )
 
 var (
@@ -38,14 +39,16 @@ var (
 
 // Provider is the implementation of `goth.Provider` for accessing Xero.
 type Provider struct {
-	ClientKey    string
-	Secret       string
-	CallbackURL  string
-	HTTPClient   *http.Client
-	Method       string
-	debug        bool
-	consumer     *oauth.Consumer
-	providerName string
+	ClientKey       string
+	Secret          string
+	CallbackURL     string
+	HTTPClient      *http.Client
+	Method          string
+	UserAgentString string
+	PrivateKey      string
+	debug           bool
+	consumer        *oauth.Consumer
+	providerName    string
 }
 
 //newPublicConsumer creates a consumer capable of communicating with a Public application: https://developer.xero.com/documentation/auth-and-limits/public-applications
@@ -53,7 +56,7 @@ func (p *Provider) newPublicConsumer(authURL string) *oauth.Consumer {
 
 	var c *oauth.Consumer
 
-	if p.HTTPClient != nil{
+	if p.HTTPClient != nil {
 		c = oauth.NewCustomHttpClientConsumer(
 			p.ClientKey,
 			p.Secret,
@@ -81,12 +84,7 @@ func (p *Provider) newPublicConsumer(authURL string) *oauth.Consumer {
 
 //newPartnerConsumer creates a consumer capable of communicating with a Partner application: https://developer.xero.com/documentation/auth-and-limits/partner-applications
 func (p *Provider) newPrivateOrPartnerConsumer(authURL string) *oauth.Consumer {
-	privateKeyFileContents, err := ioutil.ReadFile(privateKeyFilePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	block, _ := pem.Decode([]byte(privateKeyFileContents))
+	block, _ := pem.Decode([]byte(p.PrivateKey))
 
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
@@ -95,7 +93,7 @@ func (p *Provider) newPrivateOrPartnerConsumer(authURL string) *oauth.Consumer {
 
 	var c *oauth.Consumer
 
-	if p.HTTPClient != nil{
+	if p.HTTPClient != nil {
 		c = oauth.NewCustomRSAConsumer(
 			p.ClientKey,
 			privateKey,
@@ -134,19 +132,10 @@ func New(clientKey, secret, callbackURL string) *Provider {
 		//Options are public, private, and partner
 		//Use public if this is your first time.
 		//More details here: https://developer.xero.com/documentation/getting-started/api-application-types
-		Method:       os.Getenv("XERO_METHOD"),
-		providerName: "xero",
-	}
-
-	switch p.Method {
-	case "private":
-		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
-	case "public":
-		p.consumer = p.newPublicConsumer(authorizeURL)
-	case "partner":
-		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
-	default:
-		p.consumer = p.newPublicConsumer(authorizeURL)
+		Method:          os.Getenv("XERO_METHOD"),
+		PrivateKey:      helpers.ReadPrivateKeyFromPath(privateKeyFilePath),
+		UserAgentString: userAgentString,
+		providerName:    "xero",
 	}
 	return p
 }
@@ -158,20 +147,11 @@ func NewCustomHTTPClient(clientKey, secret, callbackURL string, httpClient *http
 		Secret:      secret,
 		CallbackURL: callbackURL,
 
-		Method:       os.Getenv("XERO_METHOD"),
-		providerName: "xero",
-		HTTPClient:	  httpClient,
-	}
-
-	switch p.Method {
-	case "private":
-		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
-	case "public":
-		p.consumer = p.newPublicConsumer(authorizeURL)
-	case "partner":
-		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
-	default:
-		p.consumer = p.newPublicConsumer(authorizeURL)
+		Method:          os.Getenv("XERO_METHOD"),
+		PrivateKey:      helpers.ReadPrivateKeyFromPath(privateKeyFilePath),
+		UserAgentString: userAgentString,
+		providerName:    "xero",
+		HTTPClient:      httpClient,
 	}
 	return p
 }
@@ -199,10 +179,14 @@ func (p *Provider) Debug(debug bool) {
 // BeginAuth asks Xero for an authentication end-point and a request token for a session.
 // Xero does not support the "state" variable.
 func (p *Provider) BeginAuth(state string) (goth.Session, error) {
+	if p.consumer == nil {
+		p.initConsumer()
+	}
+
 	if p.Method == "private" {
 		accessToken := &oauth.AccessToken{
-			Token:  os.Getenv("XERO_KEY"),
-			Secret: os.Getenv("XERO_SECRET"),
+			Token:  p.ClientKey,
+			Secret: p.Secret,
 		}
 		privateSession := &Session{
 			AuthURL:            authorizeURL,
@@ -227,16 +211,19 @@ func (p *Provider) BeginAuth(state string) (goth.Session, error) {
 func (p *Provider) processRequest(request *http.Request, session goth.Session, additionalHeaders map[string]string) ([]byte, error) {
 	sess := session.(*Session)
 
+	if p.consumer == nil {
+		p.initConsumer()
+	}
+
 	if sess.AccessToken == nil {
 		// data is not yet retrieved since accessToken is still empty
 		return nil, fmt.Errorf("%s cannot process request without accessToken", p.providerName)
 	}
 
-	request.Header.Add("User-Agent", userAgentString)
+	request.Header.Add("User-Agent", p.UserAgentString)
 	for key, value := range additionalHeaders {
 		request.Header.Add(key, value)
 	}
-
 
 	var err error
 	var response *http.Response
@@ -394,6 +381,9 @@ func (p *Provider) FetchUser(session goth.Session) (goth.User, error) {
 
 //RefreshOAuth1Token should be used instead of RefeshToken which is not compliant with the Oauth1.0a standard
 func (p *Provider) RefreshOAuth1Token(session *Session) error {
+	if p.consumer == nil {
+		p.initConsumer()
+	}
 	if session.AccessToken == nil {
 		return fmt.Errorf("Could not refresh token as last valid accessToken was not found")
 	}
@@ -443,4 +433,17 @@ func (p *Provider) GetSessionFromStore(request *http.Request, response http.Resp
 		return nil, errors.New("access token has expired - please reconnect")
 	}
 	return session, err
+}
+
+func (p *Provider) initConsumer() {
+	switch p.Method {
+	case "private":
+		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
+	case "public":
+		p.consumer = p.newPublicConsumer(authorizeURL)
+	case "partner":
+		p.consumer = p.newPrivateOrPartnerConsumer(authorizeURL)
+	default:
+		p.consumer = p.newPublicConsumer(authorizeURL)
+	}
 }
