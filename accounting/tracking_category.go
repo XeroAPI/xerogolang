@@ -21,7 +21,7 @@ type TrackingCategory struct {
 	Status string `json:"Status,omitempty" xml:"Status,omitempty"`
 
 	// See Tracking Options
-	Options []TrackingOption `json:"Options,omitempty" xml:"-"`
+	Options []TrackingOption `json:"Options,omitempty" xml:"Option"`
 }
 
 //TrackingCategories is a collection of TrackingCategories
