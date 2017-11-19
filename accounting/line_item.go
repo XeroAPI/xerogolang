@@ -30,7 +30,7 @@ type LineItem struct {
 	LineAmount float32 `json:"LineAmount,omitempty" xml:"LineAmount,omitempty"`
 
 	// Optional Tracking Category – see Tracking.  Any LineItem can have a maximum of 2 <TrackingCategory> elements.
-	Tracking []TrackingCategory `json:"Tracking,omitempty" xml:"Tracking,omitempty"`
+	Tracking []TrackingCategory `json:"Tracking,omitempty" xml:"Tracking>TrackingCategory,omitempty"`
 
 	// Percentage discount being applied to a line item (only supported on ACCREC invoices – ACC PAY invoices and credit notes in Xero do not support discounts
 	DiscountRate float32 `json:"DiscountRate,omitempty" xml:"DiscountRate,omitempty"`

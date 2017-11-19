@@ -68,3 +68,7 @@ func (t *TrackingOption) Update(provider *xerogolang.Provider, session goth.Sess
 
 	return unmarshalTrackingCategory(trackingCategoryResponseBytes)
 }
+
+func (t *TrackingOption) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return e.EncodeElement(t.Name, start)
+}
