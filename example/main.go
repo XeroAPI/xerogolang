@@ -415,7 +415,7 @@ func findHandler(res http.ResponseWriter, req *http.Request) {
 		t, _ := template.New("foo").Parse(reportTemplate)
 		t.Execute(res, bankSummaryCollection.Reports[0])
 	case "budgetsummary":
-		budgetSummaryCollection, err := accounting.RunBudgetSummary(provider, session)
+		budgetSummaryCollection, err := accounting.RunBudgetSummary(provider, session, nil)
 		if err != nil {
 			fmt.Fprintln(res, err)
 			return
