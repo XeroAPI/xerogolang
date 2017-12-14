@@ -205,12 +205,12 @@ func RunBASReports(provider *xerogolang.Provider, session goth.Session) (*Report
 }
 
 //RunBudgetSummary will run the Budget Summary Report and marshal the results to a Report Struct
-func RunBudgetSummary(provider *xerogolang.Provider, session goth.Session) (*Reports, error) {
+func RunBudgetSummary(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Reports, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
 
-	reportResponseBytes, err := provider.Find(session, "Reports/BudgetSummary", additionalHeaders, nil)
+	reportResponseBytes, err := provider.Find(session, "Reports/BudgetSummary", additionalHeaders, querystringParameters)
 	if err != nil {
 		return nil, err
 	}
