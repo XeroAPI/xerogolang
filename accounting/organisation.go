@@ -80,7 +80,10 @@ type Organisation struct {
 	// Organisation Type
 	OrganisationEntityType string `json:"OrganisationEntityType,omitempty"`
 
-	// A unique identifier for the organisation. Potential uses.
+	// A unique identifier for the organisation.
+	OrganisationID string `json:"OrganisationID,omitempty"`
+
+	// A shorter unique identifier for the organisation.
 	ShortCode string `json:"ShortCode,omitempty"`
 
 	// Description of business type as defined in Organisation settings

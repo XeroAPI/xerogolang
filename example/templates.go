@@ -77,6 +77,7 @@ var indexConnectedTemplate = `
 <p><a href="/findall/banktransfers?provider=xero">find all bank transfers</a></p>
 <p><a href="/findall/banktransfers?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transfers changed since 1 May 2017</a></p>
 <p><a href="/findall/brandingthemes?provider=xero">find all branding themes</a></p>
+<p><a href="/findall/organisation?provider=xero">find organisation</a></p>
 `
 
 var connectTemplate = `
@@ -153,6 +154,7 @@ var connectTemplate = `
 <p><a href="/findall/banktransfers?provider=xero">find all bank transfers</a></p>
 <p><a href="/findall/banktransfers?provider=xero&modifiedsince=2017-05-01T00%3A00%3A00Z">find all bank transfers changed since 1 May 2017</a></p>
 <p><a href="/findall/brandingthemes?provider=xero">find all branding themes</a></p>
+<p><a href="/findall/organisation?provider=xero">find organisation</a></p>
 `
 
 var invoiceTemplate = `
@@ -925,4 +927,18 @@ var brandingThemesTemplate = `
 <p>CreatedDate: {{.CreatedDateUTC}}</p>
 <p>-----------------------------------------------------</p>
 {{end}}
+`
+var organisationTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+<p>ID: {{.OrganisationID}}</p>
+<p>Name: {{.Name}}</p>
+<p>LegalName: {{.LegalName}}</p>
+<p>PaysTax: {{.PaysTax}}</p>
+<p>TaxNumber: {{.TaxNumber}}</p>
+<p>SalesTaxBasis: {{.SalesTaxBasis}}</p>
+<p>OrganisationType: {{.OrganisationType}}</p>
+<p>OrganisationStatus: {{.OrganisationStatus}}</p>
+<p>FinancialYearEndDay: {{.FinancialYearEndDay}}</p>
+<p>FinancialYearEndMonth: {{.FinancialYearEndMonth}}</p>
+<p>ShortCode: {{.ShortCode}}</p>
 `
