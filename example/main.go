@@ -903,6 +903,15 @@ func findAllHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		t, _ := template.New("foo").Parse(brandingThemesTemplate)
 		t.Execute(res, currencyCollection.BrandingThemes)
+	case "organisation":
+		organisationCollection, err := accounting.FindOrganisation(provider, session)
+		if err != nil {
+			fmt.Fprintln(res, err)
+			return
+		}
+
+		t, _ := template.New("foo").Parse(organisationTemplate)
+		t.Execute(res, organisationCollection.Organisations[0])
 	default:
 		fmt.Fprintln(res, "Unknown type specified")
 		return
