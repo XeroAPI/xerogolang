@@ -30,7 +30,7 @@ var (
 	tokenURL        = "https://api.xero.com/oauth/AccessToken"
 	endpointProfile = "https://api.xero.com/api.xro/2.0/"
 	//userAgentString should match the name of your Application
-	userAgentString = os.Getenv("XERO_USER_AGENT") + " (xerogolang 0.1)"
+	userAgentString = os.Getenv("XERO_USER_AGENT") + " (xerogolang 0.1) " + os.Getenv("XERO_KEY")
 	//privateKeyFilePath is a file path to your .pem private/public key file
 	//You only need this for private and partner Applications
 	//more details here: https://developer.xero.com/documentation/api-guides/create-publicprivate-key
