@@ -17,9 +17,9 @@ import (
 
 	"crypto"
 
+	"github.com/XeroAPI/xerogolang/auth"
 	"github.com/XeroAPI/xerogolang/helpers"
 	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
 	"github.com/mrjones/oauth"
 	"golang.org/x/oauth2"
 )
@@ -409,7 +409,7 @@ func (p *Provider) RefreshTokenAvailable() bool {
 //supplying a goth.Session to the interactors it will work though so feel free to use your
 //own method
 func (p *Provider) GetSessionFromStore(request *http.Request, response http.ResponseWriter) (goth.Session, error) {
-	sessionMarshalled, _ := gothic.Store.Get(request, "xero"+gothic.SessionName)
+	sessionMarshalled, _ := auth.Store.Get(request, "xero"+auth.SessionName)
 	value := sessionMarshalled.Values["xero"]
 	if value == nil {
 		return nil, errors.New("could not find a matching session for this request")
