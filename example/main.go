@@ -12,10 +12,10 @@ import (
 
 	"github.com/XeroAPI/xerogolang"
 	"github.com/XeroAPI/xerogolang/accounting"
+	"github.com/XeroAPI/xerogolang/auth"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
 )
 
 var (
@@ -44,7 +44,7 @@ func init() {
 
 	store.MaxLength(math.MaxInt64)
 
-	gothic.Store = store
+	auth.Store = store
 }
 
 //indexHandler dictates what is processed on the index route
@@ -67,17 +67,17 @@ func indexHandler(res http.ResponseWriter, req *http.Request) {
 //authHandler dictates what is processed on the auth route
 func authHandler(res http.ResponseWriter, req *http.Request) {
 	// try to get the user without re-authenticating
-	if gothUser, err := gothic.CompleteUserAuth(res, req); err == nil {
+	if gothUser, err := auth.CompleteUserAuth(res, req); err == nil {
 		t, _ := template.New("foo").Parse(connectTemplate)
 		t.Execute(res, gothUser)
 	} else {
-		gothic.BeginAuthHandler(res, req)
+		auth.BeginAuthHandler(res, req)
 	}
 }
 
 //callbackHandler dictates what is processed on the auth/callback route
 func callbackHandler(res http.ResponseWriter, req *http.Request) {
-	user, err := gothic.CompleteUserAuth(res, req)
+	user, err := auth.CompleteUserAuth(res, req)
 	if err != nil {
 		fmt.Fprintln(res, err)
 		return
@@ -224,7 +224,7 @@ func createHandler(res http.ResponseWriter, req *http.Request) {
 
 //disconnectHandler dictates what is processed on the disconnect route
 func disconnectHandler(res http.ResponseWriter, req *http.Request) {
-	gothic.Logout(res, req)
+	auth.Logout(res, req)
 	res.Header().Set("Location", "/")
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
