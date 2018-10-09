@@ -128,7 +128,7 @@ type Balances struct {
 //Balance is the raw AccountsReceivable(sales invoices) and AccountsPayable(bills)
 //outstanding and overdue amounts, not converted to base currency
 type Balance struct {
-	Outstanding float32 `json:"Oustanding,omitempty" xml:"Oustanding,omitempty"`
+	Outstanding float32 `json:"Outstanding,omitempty" xml:"Outstanding,omitempty"`
 	Overdue     float32 `json:"Overdue,omitempty" xml:"Overdue,omitempty"`
 }
 
