@@ -1,4 +1,4 @@
-module github.com/ninjadojo/xerogolang
+module github.com/XeroAPI/xerogolang
 
 require (
 	github.com/XeroAPI/xerogolang v0.0.0-20181009065450-346527cfbbda
