@@ -249,8 +249,6 @@ func (p *Provider) processRequest(request *http.Request, session goth.Session, a
 
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
-			"%d error trying to find information.\n\nResponse:\n%s",
-			response.StatusCode,
 			helpers.ReaderToString(response.Body),
 		)
 	}
