@@ -31,13 +31,13 @@ type Receipt struct {
 	LineAmountTypes string `json:"LineAmountTypes,omitempty" xml:"LineAmountTypes,omitempty"`
 
 	// Total of receipt excluding taxes
-	SubTotal float32 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
+	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
 
 	// Total tax on receipt
-	TotalTax float32 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
+	TotalTax float64 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
 
 	// Total of receipt tax inclusive (i.e. SubTotal + TotalTax)
-	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// Xero generated unique identifier for receipt
 	ReceiptID string `json:"ReceiptID,omitempty" xml:"ReceiptID,omitempty"`

@@ -35,7 +35,7 @@ type BankTransaction struct {
 	CurrencyCode string `json:"CurrencyCode,omitempty" xml:"CurrencyCode,omitempty"`
 
 	// Exchange rate to base currency when money is spent or received. e.g. 0.7500 Only used for bank transactions in non base currency. If this isn’t specified for non base currency accounts then either the user-defined rate (preference) or the XE.com day rate will be used. Setting currency is only supported on overpayments.
-	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// URL link to a source document – shown as “Go to App Name”
 	URL string `json:"Url,omitempty" xml:"Url,omitempty"`
@@ -47,13 +47,13 @@ type BankTransaction struct {
 	LineAmountTypes string `json:"LineAmountTypes,omitempty" xml:"LineAmountTypes,omitempty"`
 
 	// Total of bank transaction excluding taxes
-	SubTotal float32 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
+	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
 
 	// Total tax on bank transaction
-	TotalTax float32 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
+	TotalTax float64 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
 
 	// Total of bank transaction tax inclusive
-	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// Xero generated unique identifier for bank transaction
 	BankTransactionID string `json:"BankTransactionID,omitempty" xml:"BankTransactionID,omitempty"`

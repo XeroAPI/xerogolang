@@ -31,13 +31,13 @@ type ExpenseClaim struct {
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
 
 	// The total of an expense claim being paid
-	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// The amount due to be paid for an expense claim
-	AmountDue float32 `json:"AmountDue,omitempty" xml:"AmountDue,omitempty"`
+	AmountDue float64 `json:"AmountDue,omitempty" xml:"AmountDue,omitempty"`
 
 	// The amount still to pay for an expense claim
-	AmountPaid float32 `json:"AmountPaid,omitempty" xml:"AmountPaid,omitempty"`
+	AmountPaid float64 `json:"AmountPaid,omitempty" xml:"AmountPaid,omitempty"`
 
 	// The date when the expense claim is due to be paid YYYY-MM-DD
 	PaymentDueDate string `json:"PaymentDueDate,omitempty" xml:"PaymentDueDate,omitempty"`

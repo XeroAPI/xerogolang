@@ -35,13 +35,13 @@ type CreditNote struct {
 	LineItems []LineItem `json:"LineItems,omitempty" xml:"LineItems>LineItem,omitempty"`
 
 	// The subtotal of the credit note excluding taxes
-	SubTotal float32 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
+	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
 
 	// The total tax on the credit note
-	TotalTax float32 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
+	TotalTax float64 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
 
 	// The total of the Credit Note(subtotal + total tax)
-	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// UTC timestamp of last update to the credit note
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
@@ -65,10 +65,10 @@ type CreditNote struct {
 	SentToContact bool `json:"SentToContact,omitempty" xml:"SentToContact,omitempty"`
 
 	// The currency rate for a multicurrency invoice. If no rate is specified, the XE.com day rate is used
-	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// The remaining credit balance on the Credit Note
-	RemainingCredit float32 `json:"RemainingCredit,omitempty" xml:"-"`
+	RemainingCredit float64 `json:"RemainingCredit,omitempty" xml:"-"`
 
 	// See Allocations
 	Allocations *[]Allocation `json:"Allocations,omitempty" xml:"-"`

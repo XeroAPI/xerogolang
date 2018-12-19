@@ -26,10 +26,10 @@ type Payment struct {
 	Date string `json:"Date,omitempty" xml:"Date,omitempty"`
 
 	// Exchange rate when payment is received. Only used for non base currency invoices and credit notes e.g. 0.7500
-	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// The amount of the payment. Must be less than or equal to the outstanding amount owing on the invoice e.g. 200.00
-	Amount float32 `json:"Amount,omitempty" xml:"Amount,omitempty"`
+	Amount float64 `json:"Amount,omitempty" xml:"Amount,omitempty"`
 
 	// An optional description for the payment e.g. Direct Debit
 	Reference string `json:"Reference,omitempty" xml:"Reference,omitempty"`
@@ -188,7 +188,7 @@ func RemovePayment(provider *xerogolang.Provider, session goth.Session, paymentI
 }
 
 //GenerateExamplePayment Creates an Example payment
-func GenerateExamplePayment(invoiceID string, amount float32) *Payments {
+func GenerateExamplePayment(invoiceID string, amount float64) *Payments {
 	payment := Payment{
 		Date:   helpers.TodayRFC3339(),
 		Amount: amount,

@@ -44,10 +44,10 @@ type Item struct {
 	IsTrackedAsInventory bool `json:"IsTrackedAsInventory,omitempty" xml:"-"`
 
 	// The value of the item on hand. Calculated using average cost accounting.
-	TotalCostPool float32 `json:"TotalCostPool,omitempty" xml:"-"`
+	TotalCostPool float64 `json:"TotalCostPool,omitempty" xml:"-"`
 
 	// The quantity of the item on hand
-	QuantityOnHand float32 `json:"QuantityOnHand,omitempty" xml:"-"`
+	QuantityOnHand float64 `json:"QuantityOnHand,omitempty" xml:"-"`
 
 	// Last modified date in UTC format
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
@@ -64,7 +64,7 @@ type Items struct {
 //PurchaseAndSaleDetails are Elements for Purchases and Sales
 type PurchaseAndSaleDetails struct {
 	//Unit Price of the item. By default UnitPrice is returned to two decimal places.  You can use 4 decimal places by adding the unitdp=4 querystring parameter to your request.
-	UnitPrice float32 `json:"UnitPrice,omitempty" xml:"UnitPrice,omitempty"`
+	UnitPrice float64 `json:"UnitPrice,omitempty" xml:"UnitPrice,omitempty"`
 
 	//Default account code to be used for purchased/sale. Not applicable to the purchase details of tracked items
 	AccountCode string `json:"AccountCode,omitempty" xml:"AccountCode,omitempty"`
