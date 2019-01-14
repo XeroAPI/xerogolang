@@ -14,7 +14,7 @@ import (
 type BankTransfer struct {
 
 	//
-	Amount float32 `json:"Amount" xml:"Amount"`
+	Amount float64 `json:"Amount" xml:"Amount"`
 
 	// The date of the Transfer YYYY-MM-DD
 	Date string `json:"Date,omitempty" xml:"Date,omitempty"`
@@ -23,7 +23,7 @@ type BankTransfer struct {
 	BankTransferID string `json:"BankTransferID,omitempty" xml:"BankTransferID,omitempty"`
 
 	// The currency rate
-	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// The Bank Transaction ID for the source account
 	FromBankTransactionID string `json:"FromBankTransactionID,omitempty" xml:"FromBankTransactionID,omitempty"`
