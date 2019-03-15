@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -31,13 +30,13 @@ type ExpenseClaim struct {
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
 
 	// The total of an expense claim being paid
-	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// The amount due to be paid for an expense claim
-	AmountDue float64 `json:"AmountDue,omitempty" xml:"AmountDue,omitempty"`
+	AmountDue float32 `json:"AmountDue,omitempty" xml:"AmountDue,omitempty"`
 
 	// The amount still to pay for an expense claim
-	AmountPaid float64 `json:"AmountPaid,omitempty" xml:"AmountPaid,omitempty"`
+	AmountPaid float32 `json:"AmountPaid,omitempty" xml:"AmountPaid,omitempty"`
 
 	// The date when the expense claim is due to be paid YYYY-MM-DD
 	PaymentDueDate string `json:"PaymentDueDate,omitempty" xml:"PaymentDueDate,omitempty"`
@@ -87,10 +86,10 @@ func unmarshalExpenseClaim(expenseClaimResponseBytes []byte) (*ExpenseClaims, er
 func (e *ExpenseClaims) Create(provider *xerogolang.Provider, session goth.Session) (*ExpenseClaims, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(e, "  ", "	")
+	body, err := json.MarshalIndent(e, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +107,7 @@ func (e *ExpenseClaims) Create(provider *xerogolang.Provider, session goth.Sessi
 func (e *ExpenseClaims) Update(provider *xerogolang.Provider, session goth.Session) (*ExpenseClaims, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
 	//strip out user details because we only need to send an ID
@@ -117,7 +116,7 @@ func (e *ExpenseClaims) Update(provider *xerogolang.Provider, session goth.Sessi
 	}
 	e.ExpenseClaims[0].User = u
 
-	body, err := xml.MarshalIndent(e, "  ", "	")
+	body, err := json.MarshalIndent(e, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

@@ -21,13 +21,13 @@ type JournalLine struct {
 	Description string `json:"Description,omitempty" xml:"Description,omitempty"`
 
 	// Net amount of journal line. This will be a positive value for a debit and negative for a credit
-	NetAmount float64 `json:"NetAmount" xml:"NetAmount"`
+	NetAmount float32 `json:"NetAmount" xml:"NetAmount"`
 
 	// 	Gross amount of journal line (NetAmount + TaxAmount).
-	GrossAmount float64 `json:"GrossAmount" xml:"GrossAmount"`
+	GrossAmount float32 `json:"GrossAmount" xml:"GrossAmount"`
 
 	// The calculated tax amount based on the TaxType and LineAmount
-	TaxAmount float64 `json:"TaxAmount,omitempty" xml:"TaxAmount,omitempty"`
+	TaxAmount float32 `json:"TaxAmount,omitempty" xml:"TaxAmount,omitempty"`
 
 	// Used as an override if the default Tax Code for the selected <AccountCode> is not correct – see TaxTypes.
 	TaxType string `json:"TaxType,omitempty" xml:"TaxType,omitempty"`

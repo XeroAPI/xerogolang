@@ -1,6 +1,7 @@
 package accounting
 
 import (
+	"encoding/json"
 	"encoding/xml"
 
 	"github.com/XeroAPI/xerogolang"
@@ -33,10 +34,10 @@ type Options struct {
 func (o *Options) Add(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(o, "  ", "	")
+	body, err := json.MarshalIndent(o, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -53,10 +54,10 @@ func (o *Options) Add(provider *xerogolang.Provider, session goth.Session) (*Tra
 func (t *TrackingOption) Update(provider *xerogolang.Provider, session goth.Session) (*TrackingCategories, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(t, "  ", "	")
+	body, err := json.MarshalIndent(t, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

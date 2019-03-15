@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -44,10 +43,10 @@ type Item struct {
 	IsTrackedAsInventory bool `json:"IsTrackedAsInventory,omitempty" xml:"-"`
 
 	// The value of the item on hand. Calculated using average cost accounting.
-	TotalCostPool float64 `json:"TotalCostPool,omitempty" xml:"-"`
+	TotalCostPool float32 `json:"TotalCostPool,omitempty" xml:"-"`
 
 	// The quantity of the item on hand
-	QuantityOnHand float64 `json:"QuantityOnHand,omitempty" xml:"-"`
+	QuantityOnHand float32 `json:"QuantityOnHand,omitempty" xml:"-"`
 
 	// Last modified date in UTC format
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
@@ -64,7 +63,7 @@ type Items struct {
 //PurchaseAndSaleDetails are Elements for Purchases and Sales
 type PurchaseAndSaleDetails struct {
 	//Unit Price of the item. By default UnitPrice is returned to two decimal places.  You can use 4 decimal places by adding the unitdp=4 querystring parameter to your request.
-	UnitPrice float64 `json:"UnitPrice,omitempty" xml:"UnitPrice,omitempty"`
+	UnitPrice float32 `json:"UnitPrice,omitempty" xml:"UnitPrice,omitempty"`
 
 	//Default account code to be used for purchased/sale. Not applicable to the purchase details of tracked items
 	AccountCode string `json:"AccountCode,omitempty" xml:"AccountCode,omitempty"`
@@ -109,10 +108,10 @@ func unmarshalItem(itemResponseBytes []byte) (*Items, error) {
 func (i *Items) Create(provider *xerogolang.Provider, session goth.Session) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(i, "  ", "	")
+	body, err := json.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -130,10 +129,10 @@ func (i *Items) Create(provider *xerogolang.Provider, session goth.Session) (*It
 func (i *Items) Update(provider *xerogolang.Provider, session goth.Session) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(i, "  ", "	")
+	body, err := json.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -86,10 +85,10 @@ func unmarshalManualJournal(manualJournalResponseBytes []byte) (*ManualJournals,
 func (m *ManualJournals) Create(provider *xerogolang.Provider, session goth.Session) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(m, "  ", "	")
+	body, err := json.MarshalIndent(m, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -107,10 +106,10 @@ func (m *ManualJournals) Create(provider *xerogolang.Provider, session goth.Sess
 func (m *ManualJournals) Update(provider *xerogolang.Provider, session goth.Session) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(m, "  ", "	")
+	body, err := json.MarshalIndent(m, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -65,19 +64,19 @@ type PurchaseOrder struct {
 	PurchaseOrderID string `json:"PurchaseOrderID,omitempty" xml:"PurchaseOrderID,omitempty"`
 
 	// The currency rate for a multicurrency purchase order. As no rate can be specified, the XE.com day rate is used.
-	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// Total of purchase order excluding taxes
-	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
+	SubTotal float32 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
 
 	// Total tax on purchase order
-	TotalTax float64 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
+	TotalTax float32 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
 
 	// Total of Purchase Order tax inclusive (i.e. SubTotal + TotalTax)
-	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// Total of discounts applied on the purchase order line items
-	TotalDiscount float64 `json:"TotalDiscount,omitempty" xml:"TotalDiscount,omitempty"`
+	TotalDiscount float32 `json:"TotalDiscount,omitempty" xml:"TotalDiscount,omitempty"`
 
 	// boolean to indicate if a purchase order has an attachment
 	HasAttachments bool `json:"HasAttachments,omitempty" xml:"-"`
@@ -124,10 +123,10 @@ func unmarshalPurchaseOrder(purchaseOrderResponseBytes []byte) (*PurchaseOrders,
 func (p *PurchaseOrders) Create(provider *xerogolang.Provider, session goth.Session) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(p, "  ", "	")
+	body, err := json.MarshalIndent(p, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -145,10 +144,10 @@ func (p *PurchaseOrders) Create(provider *xerogolang.Provider, session goth.Sess
 func (p *PurchaseOrders) Update(provider *xerogolang.Provider, session goth.Session) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(p, "  ", "	")
+	body, err := json.MarshalIndent(p, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -14,7 +13,7 @@ import (
 type BankTransfer struct {
 
 	//
-	Amount float64 `json:"Amount" xml:"Amount"`
+	Amount float32 `json:"Amount" xml:"Amount"`
 
 	// The date of the Transfer YYYY-MM-DD
 	Date string `json:"Date,omitempty" xml:"Date,omitempty"`
@@ -23,7 +22,7 @@ type BankTransfer struct {
 	BankTransferID string `json:"BankTransferID,omitempty" xml:"BankTransferID,omitempty"`
 
 	// The currency rate
-	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// The Bank Transaction ID for the source account
 	FromBankTransactionID string `json:"FromBankTransactionID,omitempty" xml:"FromBankTransactionID,omitempty"`
@@ -86,10 +85,10 @@ func unmarshalBankTransfer(bankTransferResponseBytes []byte) (*BankTransfers, er
 func (b *BankTransfers) Create(provider *xerogolang.Provider, session goth.Session) (*BankTransfers, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(b, "  ", "	")
+	body, err := json.MarshalIndent(b, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

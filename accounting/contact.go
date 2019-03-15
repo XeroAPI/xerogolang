@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -104,7 +103,7 @@ type Contact struct {
 	BatchPayments BatchPayment `json:"BatchPayments,omitempty" xml:"-"`
 
 	// The default discount rate for the contact (read only)
-	Discount float64 `json:"Discount,omitempty" xml:"-"`
+	Discount float32 `json:"Discount,omitempty" xml:"-"`
 
 	// The raw AccountsReceivable(sales Contacts) and AccountsPayable(bills) outstanding and overdue amounts, not converted to base currency (read only)
 	Balances Balances `json:"Balances,omitempty" xml:"-"`
@@ -128,8 +127,8 @@ type Balances struct {
 //Balance is the raw AccountsReceivable(sales invoices) and AccountsPayable(bills)
 //outstanding and overdue amounts, not converted to base currency
 type Balance struct {
-	Outstanding float64 `json:"Outstanding,omitempty" xml:"Outstanding,omitempty"`
-	Overdue     float64 `json:"Overdue,omitempty" xml:"Overdue,omitempty"`
+	Outstanding float32 `json:"Outstanding,omitempty" xml:"Outstanding,omitempty"`
+	Overdue     float32 `json:"Overdue,omitempty" xml:"Overdue,omitempty"`
 }
 
 //The Xero API returns Dates based on the .Net JSON date format available at the time of development
@@ -165,10 +164,10 @@ func unmarshalContact(contactResponseBytes []byte) (*Contacts, error) {
 func (c *Contacts) Create(provider *xerogolang.Provider, session goth.Session) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(c, "  ", "	")
+	body, err := json.MarshalIndent(c, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -186,10 +185,10 @@ func (c *Contacts) Create(provider *xerogolang.Provider, session goth.Session) (
 func (c *Contacts) Update(provider *xerogolang.Provider, session goth.Session) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(c, "  ", "	")
+	body, err := json.MarshalIndent(c, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +247,7 @@ func FindContact(provider *xerogolang.Provider, session goth.Session, contactID 
 func (c *Contacts) AddToContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
 	//We only want to send ContactID's or the endpoint will return a 400 so we need to strip out all the other contact info
@@ -260,7 +259,7 @@ func (c *Contacts) AddToContactGroup(provider *xerogolang.Provider, session goth
 		contactsToAdd = append(contactsToAdd, contactToAdd)
 	}
 
-	body, err := xml.MarshalIndent(contactsToAdd, "  ", "	")
+	body, err := json.MarshalIndent(contactsToAdd, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

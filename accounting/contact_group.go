@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 
 	"github.com/XeroAPI/xerogolang"
 	"github.com/markbates/goth"
@@ -43,10 +42,10 @@ func unmarshalContactGroup(contactGroupResponseBytes []byte) (*ContactGroups, er
 func (c *ContactGroups) Create(provider *xerogolang.Provider, session goth.Session) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(c, "  ", "	")
+	body, err := json.MarshalIndent(c, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -64,10 +63,10 @@ func (c *ContactGroups) Create(provider *xerogolang.Provider, session goth.Sessi
 func (c *ContactGroups) Update(provider *xerogolang.Provider, session goth.Session) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(c, "  ", "	")
+	body, err := json.MarshalIndent(c, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

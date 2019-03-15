@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -46,7 +45,7 @@ type Invoice struct {
 	CurrencyCode string `json:"CurrencyCode,omitempty" xml:"CurrencyCode,omitempty"`
 
 	// The currency rate for a multicurrency invoice. If no rate is specified, the XE.com day rate is used. (max length = [18].[6])
-	CurrencyRate float64 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
+	CurrencyRate float32 `json:"CurrencyRate,omitempty" xml:"CurrencyRate,omitempty"`
 
 	// See Invoice Status Codes
 	Status string `json:"Status,omitempty" xml:"Status,omitempty"`
@@ -61,16 +60,16 @@ type Invoice struct {
 	PlannedPaymentDate string `json:"PlannedPaymentDate,omitempty" xml:"PlannedPaymentDate,omitempty"`
 
 	// Total of invoice excluding taxes
-	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
+	SubTotal float32 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
 
 	// Total tax on invoice
-	TotalTax float64 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
+	TotalTax float32 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
 
 	// Total of Invoice tax inclusive (i.e. SubTotal + TotalTax). This will be ignored if it doesn’t equal the sum of the LineAmounts
-	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// Total of discounts applied on the invoice line items
-	TotalDiscount float64 `json:"TotalDiscount,omitempty" xml:"-"`
+	TotalDiscount float32 `json:"TotalDiscount,omitempty" xml:"-"`
 
 	// Xero generated unique identifier for invoice
 	InvoiceID string `json:"InvoiceID,omitempty" xml:"InvoiceID,omitempty"`
@@ -88,16 +87,16 @@ type Invoice struct {
 	Overpayments *[]Overpayment `json:"Overpayments,omitempty" xml:"-"`
 
 	// Amount remaining to be paid on invoice
-	AmountDue float64 `json:"AmountDue,omitempty" xml:"-"`
+	AmountDue float32 `json:"AmountDue,omitempty" xml:"-"`
 
 	// Sum of payments received for invoice
-	AmountPaid float64 `json:"AmountPaid,omitempty" xml:"-"`
+	AmountPaid float32 `json:"AmountPaid,omitempty" xml:"-"`
 
 	// The date the invoice was fully paid. Only returned on fully paid invoices
 	FullyPaidOnDate string `json:"FullyPaidOnDate,omitempty" xml:"-"`
 
 	// Sum of all credit notes, over-payments and pre-payments applied to invoice
-	AmountCredited float64 `json:"AmountCredited,omitempty" xml:"-"`
+	AmountCredited float32 `json:"AmountCredited,omitempty" xml:"-"`
 
 	// Last modified date UTC format
 	UpdatedDateUTC string `json:"UpdatedDateUTC,omitempty" xml:"-"`
@@ -148,10 +147,10 @@ func unmarshalInvoice(invoiceResponseBytes []byte) (*Invoices, error) {
 func (i *Invoices) Create(provider *xerogolang.Provider, session goth.Session) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(i, "  ", "	")
+	body, err := json.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -169,10 +168,10 @@ func (i *Invoices) Create(provider *xerogolang.Provider, session goth.Session) (
 func (i *Invoices) Update(provider *xerogolang.Provider, session goth.Session) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(i, "  ", "	")
+	body, err := json.MarshalIndent(i, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

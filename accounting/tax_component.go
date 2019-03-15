@@ -7,7 +7,7 @@ type TaxComponent struct {
 	Name string `json:"Name,omitempty" xml:"Name,omitempty"`
 
 	// Tax Rate (up to 4dp)
-	Rate float64 `json:"Rate,omitempty" xml:"Rate,omitempty"`
+	Rate float32 `json:"Rate,omitempty" xml:"Rate,omitempty"`
 
 	// Boolean to describe if Tax rate is compounded.Learn more
 	IsCompound bool `json:"IsCompound,omitempty" xml:"IsCompound,omitempty"`

@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 
 	"github.com/XeroAPI/xerogolang"
 	"github.com/markbates/goth"
@@ -42,10 +41,10 @@ type TaxRate struct {
 	CanApplyToRevenue bool `json:"CanApplyToRevenue,omitempty" xml:"CanApplyToRevenue,omitempty"`
 
 	// Tax Rate (decimal to 4dp) e.g 12.5000
-	DisplayTaxRate float64 `json:"DisplayTaxRate,omitempty" xml:"DisplayTaxRate,omitempty"`
+	DisplayTaxRate float32 `json:"DisplayTaxRate,omitempty" xml:"DisplayTaxRate,omitempty"`
 
 	// Effective Tax Rate (decimal to 4dp) e.g 12.5000
-	EffectiveRate float64 `json:"EffectiveRate,omitempty" xml:"EffectiveRate,omitempty"`
+	EffectiveRate float32 `json:"EffectiveRate,omitempty" xml:"EffectiveRate,omitempty"`
 }
 
 type TaxRates struct {
@@ -66,10 +65,10 @@ func unmarshalTaxRate(taxRateResponseBytes []byte) (*TaxRates, error) {
 func (t *TaxRates) Create(provider *xerogolang.Provider, session goth.Session) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(t, "  ", "	")
+	body, err := json.MarshalIndent(t, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +86,10 @@ func (t *TaxRates) Create(provider *xerogolang.Provider, session goth.Session) (
 func (t *TaxRates) Update(provider *xerogolang.Provider, session goth.Session) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(t, "  ", "	")
+	body, err := json.MarshalIndent(t, "  ", "	")
 	if err != nil {
 		return nil, err
 	}

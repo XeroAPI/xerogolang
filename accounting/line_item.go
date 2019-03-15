@@ -9,10 +9,10 @@ type LineItem struct {
 	Description string `json:"Description,omitempty" xml:"Description,omitempty"`
 
 	// LineItem Quantity
-	Quantity float64 `json:"Quantity,omitempty" xml:"Quantity,omitempty"`
+	Quantity float32 `json:"Quantity,omitempty" xml:"Quantity,omitempty"`
 
 	// LineItem Unit Amount
-	UnitAmount float64 `json:"UnitAmount,omitempty" xml:"UnitAmount,omitempty"`
+	UnitAmount float32 `json:"UnitAmount,omitempty" xml:"UnitAmount,omitempty"`
 
 	// See Items
 	ItemCode string `json:"ItemCode,omitempty" xml:"ItemCode,omitempty"`
@@ -24,16 +24,16 @@ type LineItem struct {
 	TaxType string `json:"TaxType,omitempty" xml:"TaxType,omitempty"`
 
 	// The tax amount is auto calculated as a percentage of the line amount (see below) based on the tax rate. This value can be overriden if the calculated <TaxAmount> is not correct.
-	TaxAmount float64 `json:"TaxAmount,omitempty" xml:"TaxAmount,omitempty"`
+	TaxAmount float32 `json:"TaxAmount,omitempty" xml:"TaxAmount,omitempty"`
 
 	// If you wish to omit either of the <Quantity> or <UnitAmount> you can provide a LineAmount and Xero will calculate the missing amount for you. The line amount reflects the discounted price if a DiscountRate has been used . i.e LineAmount = Quantity * Unit Amount * ((100 – DiscountRate)/100)
-	LineAmount float64 `json:"LineAmount,omitempty" xml:"LineAmount,omitempty"`
+	LineAmount float32 `json:"LineAmount,omitempty" xml:"LineAmount,omitempty"`
 
 	// Optional Tracking Category – see Tracking.  Any LineItem can have a maximum of 2 <TrackingCategory> elements.
 	Tracking []TrackingCategory `json:"Tracking,omitempty" xml:"Tracking>TrackingCategory,omitempty"`
 
 	// Percentage discount being applied to a line item (only supported on ACCREC invoices – ACC PAY invoices and credit notes in Xero do not support discounts
-	DiscountRate float64 `json:"DiscountRate,omitempty" xml:"DiscountRate,omitempty"`
+	DiscountRate float32 `json:"DiscountRate,omitempty" xml:"DiscountRate,omitempty"`
 
 	// The Xero identifier for a Repeating Invoicee.g. 297c2dc5-cc47-4afd-8ec8-74990b8761e9
 	RepeatingInvoiceID string `json:"RepeatingInvoiceID,omitempty" xml:"RepeatingInvoiceID,omitempty"`

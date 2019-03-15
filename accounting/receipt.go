@@ -2,7 +2,6 @@ package accounting
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"time"
 
 	"github.com/XeroAPI/xerogolang"
@@ -31,13 +30,13 @@ type Receipt struct {
 	LineAmountTypes string `json:"LineAmountTypes,omitempty" xml:"LineAmountTypes,omitempty"`
 
 	// Total of receipt excluding taxes
-	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
+	SubTotal float32 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
 
 	// Total tax on receipt
-	TotalTax float64 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
+	TotalTax float32 `json:"TotalTax,omitempty" xml:"TotalTax,omitempty"`
 
 	// Total of receipt tax inclusive (i.e. SubTotal + TotalTax)
-	Total float64 `json:"Total,omitempty" xml:"Total,omitempty"`
+	Total float32 `json:"Total,omitempty" xml:"Total,omitempty"`
 
 	// Xero generated unique identifier for receipt
 	ReceiptID string `json:"ReceiptID,omitempty" xml:"ReceiptID,omitempty"`
@@ -100,10 +99,10 @@ func unmarshalReceipt(receiptResponseBytes []byte) (*Receipts, error) {
 func (r *Receipts) Create(provider *xerogolang.Provider, session goth.Session) (*Receipts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
-	body, err := xml.MarshalIndent(r, "  ", "	")
+	body, err := json.MarshalIndent(r, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +120,7 @@ func (r *Receipts) Create(provider *xerogolang.Provider, session goth.Session) (
 func (r *Receipts) Update(provider *xerogolang.Provider, session goth.Session) (*Receipts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
-		"Content-Type": "application/xml",
+		"Content-Type": "application/json",
 	}
 
 	//strip out user and contact details because we only need to send an ID
@@ -135,7 +134,7 @@ func (r *Receipts) Update(provider *xerogolang.Provider, session goth.Session) (
 	}
 	r.Receipts[0].Contact = c
 
-	body, err := xml.MarshalIndent(r, "  ", "	")
+	body, err := json.MarshalIndent(r, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
