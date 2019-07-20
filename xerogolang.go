@@ -140,6 +140,31 @@ func New(clientKey, secret, callbackURL string) *Provider {
 	return p
 }
 
+// New creates a new Xero provider without using the environmental set variables
+// , and sets up important connection details.
+// You should always call `xero.New` to get a new Provider. Never try to create
+// one manually.
+func NewNoEnviro(clientKey, secret, callbackURL, userAgent, xeroMethod string, privateKey []byte) *Provider {
+	// Set variables without using the environment
+	userAgentString = userAgent + " (xerogolang 0.1.2) " + clientKey
+	privateKeyFilePath = ""
+
+	p := &Provider{
+		ClientKey:   clientKey,
+		Secret:      secret,
+		CallbackURL: callbackURL,
+		//Method determines how you will connect to Xero.
+		//Options are public, private, and partner
+		//Use public if this is your first time.
+		//More details here: https://developer.xero.com/documentation/getting-started/api-application-types
+		Method:          xeroMethod,
+		PrivateKey:      string(privateKey),
+		UserAgentString: userAgentString,
+		providerName:    "xero",
+	}
+	return p
+}
+
 // New creates a new Xero provider, with a custom http client
 func NewCustomHTTPClient(clientKey, secret, callbackURL string, httpClient *http.Client) *Provider {
 	p := &Provider{
