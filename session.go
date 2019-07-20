@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -33,8 +32,8 @@ func (s *Session) Authorize(provider goth.Provider, params goth.Params) (string,
 	p := provider.(*Provider)
 	if p.Method == "private" {
 		privateAccessToken := &oauth.AccessToken{
-			Token:  os.Getenv("XERO_KEY"),
-			Secret: os.Getenv("XERO_SECRET"),
+			Token:  p.ClientKey,
+			Secret: p.Secret,
 		}
 		s.AccessTokenExpires = time.Now().UTC().Add(87600 * time.Hour)
 		s.AccessToken = privateAccessToken
