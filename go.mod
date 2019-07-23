@@ -1,4 +1,4 @@
-module github.com/MichaelDaSilvaPereira/xerogolang
+module github.com/michaeldsp/xerogolang
 
 require (
 	github.com/XeroAPI/xerogolang v0.0.0-20190114004227-4c2007d9b082
