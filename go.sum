@@ -1,6 +1,8 @@
 cloud.google.com/go v0.30.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/XeroAPI/xerogolang v0.0.0-20181009065450-346527cfbbda h1:1539tHZ7fRKBUQ0wvQZ7VCf8xA4/h6T/L2mRot9wHJE=
 github.com/XeroAPI/xerogolang v0.0.0-20181009065450-346527cfbbda/go.mod h1:U4pkrQIaEmL9/7LUW/bTSIj18Y9YCcO/xT3GGxcJ+XM=
+github.com/XeroAPI/xerogolang v0.0.0-20190114004227-4c2007d9b082 h1:d5gj/IR0Ulr8ltmUv/u6RYK4Sw8ikObjS7ZfrPplA9E=
+github.com/XeroAPI/xerogolang v0.0.0-20190114004227-4c2007d9b082/go.mod h1:Igb5WzeavF5wrvEK/Z7QqRLCtl2CcwTrjz+3MxCYyAI=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gorilla/context v1.1.1 h1:AWwleXJkX/nhcU9bZSnZoi3h/qGYqQAGhq6zZe/aQW8=
