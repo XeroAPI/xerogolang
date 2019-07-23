@@ -17,8 +17,8 @@ import (
 
 	"crypto"
 
-	"github.com/XeroAPI/xerogolang/auth"
-	"github.com/XeroAPI/xerogolang/helpers"
+	"github.com/michaeldsp/xerogolang/auth"
+	"github.com/michaeldsp/xerogolang/helpers"
 	"github.com/markbates/goth"
 	"github.com/mrjones/oauth"
 	"golang.org/x/oauth2"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/XeroAPI/xerogolang"
+	"github.com/michaeldsp/xerogolang"
 	"github.com/markbates/goth"
 )
 
