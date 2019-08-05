@@ -13,6 +13,7 @@ import (
 	"github.com/XeroAPI/xerogolang"
 	"github.com/XeroAPI/xerogolang/accounting"
 	"github.com/XeroAPI/xerogolang/auth"
+	"github.com/XeroAPI/xerogolang/helpers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -37,6 +38,7 @@ var (
 	taxRates           = new(accounting.TaxRates)
 	receipts           = new(accounting.Receipts)
 	bankTransfers      = new(accounting.BankTransfers)
+	history            = new(accounting.HistoryRecords)
 )
 
 func init() {
@@ -1246,6 +1248,43 @@ func findWhereHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//findHistoryHandler dictates what is processed on the findhistory route
+func findHistoryHandler(res http.ResponseWriter, req *http.Request) {
+	session, err := provider.GetSessionFromStore(req, res)
+	if err != nil {
+		fmt.Fprintln(res, err)
+		return
+	}
+
+	vars := mux.Vars(req)
+	object := vars["object"]
+	id := vars["id"]
+	strList := []string{"banktransaction",
+											"banktransfer",
+											"contact",
+											"creditnote",
+											"expenseclaim",
+											"invoice",
+											"item",
+											"overpayment",
+											"payment",
+											"prepayment",
+											"purchaseorder",
+											"receipt",
+											"repeatinginvoice"}
+	if !helpers.StringInSlice(object, strList) {
+			fmt.Fprintln(res, "History not available on this entity")
+			return
+	}
+	historyCollection, err := accounting.FindHistoryAndNotes(provider, session, object, id)
+	if err != nil {
+		fmt.Fprintln(res, err)
+		return
+	}
+	t, _ := template.New("foo").Parse(historyTemplate)
+	t.Execute(res, historyCollection.HistoryRecords)
+}
+
 //updateHandler dictates what is processed on the update route
 func updateHandler(res http.ResponseWriter, req *http.Request) {
 	session, err := provider.GetSessionFromStore(req, res)
@@ -1517,6 +1556,9 @@ func main() {
 	fw := r.PathPrefix("/findwhere").Subrouter()
 	// "/findwhere/{object}"
 	fw.HandleFunc("/{object}", findWhereHandler).Methods("GET")
+	fh := r.PathPrefix("/findhistory").Subrouter()
+	// "/findhistory/{object}/{id}"
+	fh.HandleFunc("/{object}/{id}", findHistoryHandler).Methods("GET")
 	u := r.PathPrefix("/update").Subrouter()
 	// "/update/{object}/id"
 	u.HandleFunc("/{object}/{id}", updateHandler).Methods("GET")

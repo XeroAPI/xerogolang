@@ -177,6 +177,7 @@ var invoiceTemplate = `
 <p>AmountPaid: {{.AmountPaid}}</p>
 <p>UpdatedDate: {{.UpdatedDateUTC}}</p>
 <p><a href="/update/invoice/{{.InvoiceID}}?provider=xero">update status of this invoice</a></p>
+<p><a href="/findhistory/invoice/{{.InvoiceID}}?provider=xero">get history and notes of this invoice</a></p>
 `
 
 var invoicesTemplate = `
@@ -928,6 +929,18 @@ var brandingThemesTemplate = `
 <p>-----------------------------------------------------</p>
 {{end}}
 `
+
+var historyTemplate = `
+<p><a href="/disconnect?provider=xero">logout</a></p>
+{{range $index,$element:= .}}
+<p>Changes: {{.Changes}}</p>
+<p>Date: {{.DateUTC}}</p>
+<p>User: {{.User}}</p>
+<p>Details: {{.Details}}</p>
+<p>-----------------------------------------------------</p>
+{{end}}
+`
+
 var organisationTemplate = `
 <p><a href="/disconnect?provider=xero">logout</a></p>
 <p>ID: {{.OrganisationID}}</p>
