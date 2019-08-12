@@ -1,7 +1,6 @@
 module github.com/XeroAPI/xerogolang
 
 require (
-	github.com/XeroAPI/xerogolang v0.0.0-20181009065450-346527cfbbda
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/pat v0.0.0-20180118222023-199c85a7f6d1
