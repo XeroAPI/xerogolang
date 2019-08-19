@@ -64,7 +64,7 @@ func (h *HistoryRecords) Create(provider *xerogolang.Provider, session goth.Sess
 		"Content-Type": "application/json",
 	}
 
-	body, err := json.MarshalIndent(c, "  ", "	")
+	body, err := json.MarshalIndent(h, "  ", "	")
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (h *HistoryRecords) Create(provider *xerogolang.Provider, session goth.Sess
 		return nil, err
 	}
 
-	return unmarshalContact(contactResponseBytes)
+	return unmarshalHistoryRecord(historyRecordResponseBytes)
 }
 
 //FindHistoryAndNotes gets all history items and notes for a given type and ID.
