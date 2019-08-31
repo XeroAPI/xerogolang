@@ -454,6 +454,33 @@ func (p *Provider) GetSessionFromStore(request *http.Request, response http.Resp
 	return session, err
 }
 
+//GetSessionFromStoreWithProvideName returns a session for a given a request and a response using a provider name
+//This is an exaple of how you could get a session from a store in aid of provider name- as long as you're
+//supplying a goth.Session to the interactors it will work though so feel free to use your
+//own method
+func (p *Provider) GetSessionFromStoreWithProvideName(request *http.Request, response http.ResponseWriter, ProviderName string) (goth.Session, error) {
+	sessionMarshalled, _ := auth.Store.Get(request, ProviderName+auth.SessionName)
+	value := sessionMarshalled.Values[ProviderName]
+	if value == nil {
+		return nil, errors.New("could not find a matching session for this request")
+	}
+	session, err := p.UnmarshalSession(value.(string))
+	if err != nil {
+		return nil, errors.New("could not unmarshal session for this request")
+	}
+	sess := session.(*Session)
+	if sess.AccessTokenExpires.Before(time.Now().UTC().Add(5 * time.Minute)) {
+		if p.Method == "partner" {
+			p.RefreshOAuth1Token(sess)
+			sessionMarshalled.Values[ProviderName] = sess.Marshal()
+			err = sessionMarshalled.Save(request, response)
+			return session, err
+		}
+		return nil, errors.New("access token has expired - please reconnect")
+	}
+	return session, err
+}
+
 func (p *Provider) initConsumer() {
 	switch p.Method {
 	case "private":
