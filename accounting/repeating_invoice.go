@@ -100,7 +100,7 @@ func unmarshalRepeatingInvoices(repeatingInvoiceResponseBytes []byte) (*Repeatin
 
 //FindRepeatingInvoices will get all repeatingInvoices
 //additional querystringParameters such as where and order can be added as a map
-func FindRepeatingInvoices(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*RepeatingInvoices, error) {
+func FindRepeatingInvoices(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*RepeatingInvoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -114,7 +114,7 @@ func FindRepeatingInvoices(provider *xerogolang.Provider, session goth.Session, 
 }
 
 //FindRepeatingInvoice will get a single repeatingInvoice - RepeatingInvoiceID must be a GUID for a repeatingInvoice
-func FindRepeatingInvoice(provider *xerogolang.Provider, session goth.Session, repeatingInvoiceID string) (*RepeatingInvoices, error) {
+func FindRepeatingInvoice(provider xerogolang.IProvider, session goth.Session, repeatingInvoiceID string) (*RepeatingInvoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

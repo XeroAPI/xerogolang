@@ -89,7 +89,7 @@ func unmarshalPayment(paymentResponseBytes []byte) (*Payments, error) {
 }
 
 //Create will create payments given an Payments struct
-func (p *Payments) Create(provider *xerogolang.Provider, session goth.Session) (*Payments, error) {
+func (p *Payments) Create(provider xerogolang.IProvider, session goth.Session) (*Payments, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -111,7 +111,7 @@ func (p *Payments) Create(provider *xerogolang.Provider, session goth.Session) (
 //Update will update an payment given an Payments struct
 //This will only handle single payment - you cannot update multiple payments in a single call
 //Payments cannot be modified, only created and deleted.
-func (p *Payments) Update(provider *xerogolang.Provider, session goth.Session) (*Payments, error) {
+func (p *Payments) Update(provider xerogolang.IProvider, session goth.Session) (*Payments, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -137,7 +137,7 @@ func (p *Payments) Update(provider *xerogolang.Provider, session goth.Session) (
 
 //FindPaymentsModifiedSince will get all payments modified after a specified date.
 //additional querystringParameters such as where, page, order can be added as a map
-func FindPaymentsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Payments, error) {
+func FindPaymentsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Payments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -155,12 +155,12 @@ func FindPaymentsModifiedSince(provider *xerogolang.Provider, session goth.Sessi
 }
 
 //FindPayments will get all payments.
-func FindPayments(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Payments, error) {
+func FindPayments(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Payments, error) {
 	return FindPaymentsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindPayment will get a single payment - paymentID must be a GUID for an payment
-func FindPayment(provider *xerogolang.Provider, session goth.Session, paymentID string) (*Payments, error) {
+func FindPayment(provider xerogolang.IProvider, session goth.Session, paymentID string) (*Payments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -174,7 +174,7 @@ func FindPayment(provider *xerogolang.Provider, session goth.Session, paymentID 
 }
 
 //RemovePayment will get a single payment - paymentID must be a GUID for an payment
-func RemovePayment(provider *xerogolang.Provider, session goth.Session, paymentID string) (*Payments, error) {
+func RemovePayment(provider xerogolang.IProvider, session goth.Session, paymentID string) (*Payments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

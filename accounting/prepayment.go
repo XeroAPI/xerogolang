@@ -100,7 +100,7 @@ func unmarshalPrepayment(prepaymentResponseBytes []byte) (*Prepayments, error) {
 //These Prepayments will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Prepayments at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindPrepaymentsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Prepayments, error) {
+func FindPrepaymentsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Prepayments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -120,12 +120,12 @@ func FindPrepaymentsModifiedSince(provider *xerogolang.Provider, session goth.Se
 //FindPrepayments will get all Prepayments. These Prepayment will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Prepayments at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindPrepayments(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Prepayments, error) {
+func FindPrepayments(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Prepayments, error) {
 	return FindPrepaymentsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindPrepayment will get a single prepayment - prepaymentID can be a GUID for an prepayment or an prepayment number
-func FindPrepayment(provider *xerogolang.Provider, session goth.Session, prepaymentID string) (*Prepayments, error) {
+func FindPrepayment(provider xerogolang.IProvider, session goth.Session, prepaymentID string) (*Prepayments, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -140,7 +140,7 @@ func FindPrepayment(provider *xerogolang.Provider, session goth.Session, prepaym
 
 //Allocate allocates a prepayment - to create a prepayment
 //use the bankTransactions endpoint.
-func (p *Prepayments) Allocate(provider *xerogolang.Provider, session goth.Session, allocations Allocations) (*Prepayments, error) {
+func (p *Prepayments) Allocate(provider xerogolang.IProvider, session goth.Session, allocations Allocations) (*Prepayments, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",

@@ -80,7 +80,7 @@ func unmarshalJournals(journalResponseBytes []byte) (*Journals, error) {
 //Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
 //Journals are ordered oldest to newest.
 //additional querystringParameters such as offset and paymentsOnly can be added as a map
-func FindJournalsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Journals, error) {
+func FindJournalsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Journals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -102,12 +102,12 @@ func FindJournalsModifiedSince(provider *xerogolang.Provider, session goth.Sessi
 //Use the offset or ModifiedSince filters with multiple API calls to retrieve larger sets of journals.
 //Journals are ordered oldest to newest.
 //additional querystringParameters such as offset and paymentsOnly can be added as a map
-func FindJournals(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Journals, error) {
+func FindJournals(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Journals, error) {
 	return FindJournalsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindJournal will get a single journal - journalID can be a GUID for an journal or an journal number
-func FindJournal(provider *xerogolang.Provider, session goth.Session, journalID string) (*Journals, error) {
+func FindJournal(provider xerogolang.IProvider, session goth.Session, journalID string) (*Journals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

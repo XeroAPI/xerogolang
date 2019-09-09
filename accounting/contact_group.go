@@ -40,7 +40,7 @@ func unmarshalContactGroup(contactGroupResponseBytes []byte) (*ContactGroups, er
 }
 
 //Create will create contactGroups given an ContactGroups struct
-func (c *ContactGroups) Create(provider *xerogolang.Provider, session goth.Session) (*ContactGroups, error) {
+func (c *ContactGroups) Create(provider xerogolang.IProvider, session goth.Session) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -61,7 +61,7 @@ func (c *ContactGroups) Create(provider *xerogolang.Provider, session goth.Sessi
 
 //Update will update an contactGroup given an ContactGroups struct
 //This will only handle single contactGroup - you cannot update multiple contactGroups in a single call
-func (c *ContactGroups) Update(provider *xerogolang.Provider, session goth.Session) (*ContactGroups, error) {
+func (c *ContactGroups) Update(provider xerogolang.IProvider, session goth.Session) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -81,7 +81,7 @@ func (c *ContactGroups) Update(provider *xerogolang.Provider, session goth.Sessi
 }
 
 //FindContactGroups will get all contactGroups
-func FindContactGroups(provider *xerogolang.Provider, session goth.Session) (*ContactGroups, error) {
+func FindContactGroups(provider xerogolang.IProvider, session goth.Session) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -95,7 +95,7 @@ func FindContactGroups(provider *xerogolang.Provider, session goth.Session) (*Co
 }
 
 //FindContactGroup will get a single contactGroup - contactGroupID must be a GUID for an contactGroup
-func FindContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*ContactGroups, error) {
+func FindContactGroup(provider xerogolang.IProvider, session goth.Session, contactGroupID string) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -109,7 +109,7 @@ func FindContactGroup(provider *xerogolang.Provider, session goth.Session, conta
 }
 
 //RemoveContactGroup will get a single contactGroup - contactGroupID must be a GUID for an contactGroup
-func RemoveContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*ContactGroups, error) {
+func RemoveContactGroup(provider xerogolang.IProvider, session goth.Session, contactGroupID string) (*ContactGroups, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

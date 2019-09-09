@@ -115,7 +115,7 @@ func unmarshalCreditNote(creditNoteResponseBytes []byte) (*CreditNotes, error) {
 }
 
 //Create will create creditNotes given an CreditNotes struct
-func (c *CreditNotes) Create(provider *xerogolang.Provider, session goth.Session) (*CreditNotes, error) {
+func (c *CreditNotes) Create(provider xerogolang.IProvider, session goth.Session) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -136,7 +136,7 @@ func (c *CreditNotes) Create(provider *xerogolang.Provider, session goth.Session
 
 //Update will update an creditNote given an CreditNotes struct
 //This will only handle single creditNote - you cannot update multiple creditNotes in a single call
-func (c *CreditNotes) Update(provider *xerogolang.Provider, session goth.Session) (*CreditNotes, error) {
+func (c *CreditNotes) Update(provider xerogolang.IProvider, session goth.Session) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -159,7 +159,7 @@ func (c *CreditNotes) Update(provider *xerogolang.Provider, session goth.Session
 //These Credit Notes will not have details like line items by default.
 //If you need details then then add a 'page' querystringParameter and get 100 Credit Notes at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindCreditNotesModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*CreditNotes, error) {
+func FindCreditNotesModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -179,12 +179,12 @@ func FindCreditNotesModifiedSince(provider *xerogolang.Provider, session goth.Se
 //FindCreditNotes will get all CreditNotes. These Credit Notes will not have details like line items by default.
 //If you need details then then add a 'page' querystringParameter and get 100 Credit Notes at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindCreditNotes(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*CreditNotes, error) {
+func FindCreditNotes(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*CreditNotes, error) {
 	return FindCreditNotesModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindCreditNote will get a single creditNote - creditNoteID can be a GUID for a creditNote or a creditNote number
-func FindCreditNote(provider *xerogolang.Provider, session goth.Session, creditNoteID string) (*CreditNotes, error) {
+func FindCreditNote(provider xerogolang.IProvider, session goth.Session, creditNoteID string) (*CreditNotes, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

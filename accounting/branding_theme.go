@@ -59,7 +59,7 @@ func unmarshalBrandingTheme(brandingThemeResponseBytes []byte) (*BrandingThemes,
 }
 
 //FindBrandingThemes will get all BrandingThemes.
-func FindBrandingThemes(provider *xerogolang.Provider, session goth.Session) (*BrandingThemes, error) {
+func FindBrandingThemes(provider xerogolang.IProvider, session goth.Session) (*BrandingThemes, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

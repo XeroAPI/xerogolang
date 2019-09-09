@@ -106,7 +106,7 @@ func unmarshalItem(itemResponseBytes []byte) (*Items, error) {
 }
 
 //Create will create items given an Items struct
-func (i *Items) Create(provider *xerogolang.Provider, session goth.Session) (*Items, error) {
+func (i *Items) Create(provider xerogolang.IProvider, session goth.Session) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -127,7 +127,7 @@ func (i *Items) Create(provider *xerogolang.Provider, session goth.Session) (*It
 
 //Update will update an item given an Items struct
 //This will only handle single item - you cannot update multiple items in a single call
-func (i *Items) Update(provider *xerogolang.Provider, session goth.Session) (*Items, error) {
+func (i *Items) Update(provider xerogolang.IProvider, session goth.Session) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -148,7 +148,7 @@ func (i *Items) Update(provider *xerogolang.Provider, session goth.Session) (*It
 
 //FindItemsModifiedSince will get all items modified after a specified date.
 //additional querystringParameters such as where, page, order can be added as a map
-func FindItemsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Items, error) {
+func FindItemsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -166,12 +166,12 @@ func FindItemsModifiedSince(provider *xerogolang.Provider, session goth.Session,
 }
 
 //FindItems will get all items.
-func FindItems(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Items, error) {
+func FindItems(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Items, error) {
 	return FindItemsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindItem will get a single item - itemID must be a GUID for an item
-func FindItem(provider *xerogolang.Provider, session goth.Session, itemID string) (*Items, error) {
+func FindItem(provider xerogolang.IProvider, session goth.Session, itemID string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -185,7 +185,7 @@ func FindItem(provider *xerogolang.Provider, session goth.Session, itemID string
 }
 
 //RemoveItem will get a single item - itemID must be a GUID for an item
-func RemoveItem(provider *xerogolang.Provider, session goth.Session, itemID string) (*Items, error) {
+func RemoveItem(provider xerogolang.IProvider, session goth.Session, itemID string) (*Items, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

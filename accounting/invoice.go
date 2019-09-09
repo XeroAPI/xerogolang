@@ -145,7 +145,7 @@ func unmarshalInvoice(invoiceResponseBytes []byte) (*Invoices, error) {
 }
 
 //Create will create invoices given an Invoices struct
-func (i *Invoices) Create(provider *xerogolang.Provider, session goth.Session) (*Invoices, error) {
+func (i *Invoices) Create(provider xerogolang.IProvider, session goth.Session) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -166,7 +166,7 @@ func (i *Invoices) Create(provider *xerogolang.Provider, session goth.Session) (
 
 //Update will update an invoice given an Invoices struct
 //This will only handle single invoice - you cannot update multiple invoices in a single call
-func (i *Invoices) Update(provider *xerogolang.Provider, session goth.Session) (*Invoices, error) {
+func (i *Invoices) Update(provider xerogolang.IProvider, session goth.Session) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -189,7 +189,7 @@ func (i *Invoices) Update(provider *xerogolang.Provider, session goth.Session) (
 //These Invoices will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Invoices at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindInvoicesModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Invoices, error) {
+func FindInvoicesModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -209,12 +209,12 @@ func FindInvoicesModifiedSince(provider *xerogolang.Provider, session goth.Sessi
 //FindInvoices will get all Invoices. These Invoice will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Invoices at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindInvoices(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Invoices, error) {
+func FindInvoices(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Invoices, error) {
 	return FindInvoicesModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindInvoice will get a single invoice - invoiceID can be a GUID for an invoice or an invoice number
-func FindInvoice(provider *xerogolang.Provider, session goth.Session, invoiceID string) (*Invoices, error) {
+func FindInvoice(provider xerogolang.IProvider, session goth.Session, invoiceID string) (*Invoices, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

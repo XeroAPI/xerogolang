@@ -105,7 +105,7 @@ type OrganisationCollection struct {
 }
 
 //FindOrganisation returns details about the Xero organisation you're connected to
-func FindOrganisation(provider *xerogolang.Provider, session goth.Session) (*OrganisationCollection, error) {
+func FindOrganisation(provider xerogolang.IProvider, session goth.Session) (*OrganisationCollection, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

@@ -58,7 +58,7 @@ func unmarshalHistoryRecord(HistoryRecordResponseBytes []byte) (*HistoryRecords,
 }
 
 //Create will create History Records given a HistoryRecords struct and a docType and id
-func (h *HistoryRecords) Create(provider *xerogolang.Provider, session goth.Session, docType string, id string) (*HistoryRecords, error) {
+func (h *HistoryRecords) Create(provider xerogolang.IProvider, session goth.Session, docType string, id string) (*HistoryRecords, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
@@ -79,7 +79,7 @@ func (h *HistoryRecords) Create(provider *xerogolang.Provider, session goth.Sess
 
 //FindHistoryAndNotes gets all history items and notes for a given type and ID.
 //it is not supported on all endpoints.  See https://developer.xero.com/documentation/api/history-and-notes#SupportedDocs
-func FindHistoryAndNotes(provider *xerogolang.Provider, session goth.Session, docType string, id string) (*HistoryRecords, error) {
+func FindHistoryAndNotes(provider xerogolang.IProvider, session goth.Session, docType string, id string) (*HistoryRecords, error) {
   additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

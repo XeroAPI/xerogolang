@@ -63,7 +63,7 @@ func unmarshalTaxRate(taxRateResponseBytes []byte) (*TaxRates, error) {
 }
 
 //Create will create taxRates given an TaxRates struct
-func (t *TaxRates) Create(provider *xerogolang.Provider, session goth.Session) (*TaxRates, error) {
+func (t *TaxRates) Create(provider xerogolang.IProvider, session goth.Session) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -84,7 +84,7 @@ func (t *TaxRates) Create(provider *xerogolang.Provider, session goth.Session) (
 
 //Update will update an taxRate given an TaxRates struct
 //This will only handle a single taxRate - you cannot update multiple taxRates in a single call
-func (t *TaxRates) Update(provider *xerogolang.Provider, session goth.Session) (*TaxRates, error) {
+func (t *TaxRates) Update(provider xerogolang.IProvider, session goth.Session) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -105,7 +105,7 @@ func (t *TaxRates) Update(provider *xerogolang.Provider, session goth.Session) (
 
 //FindTaxRates will get all TaxRates.
 //additional querystringParameters such as taxType, where and order can be added as a map
-func FindTaxRates(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*TaxRates, error) {
+func FindTaxRates(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*TaxRates, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

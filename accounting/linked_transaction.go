@@ -80,7 +80,7 @@ func unmarshalLinkedTransaction(linkedTransactionResponseBytes []byte) (*LinkedT
 }
 
 //Create will create LinkedTransactions given an LinkedTransactions struct
-func (l *LinkedTransactions) Create(provider *xerogolang.Provider, session goth.Session) (*LinkedTransactions, error) {
+func (l *LinkedTransactions) Create(provider xerogolang.IProvider, session goth.Session) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -102,7 +102,7 @@ func (l *LinkedTransactions) Create(provider *xerogolang.Provider, session goth.
 //Update will update an LinkedTransaction given an LinkedTransactions struct
 //This will only handle single LinkedTransaction - you cannot update multiple LinkedTransactions in a single call
 //LinkedTransactions cannot be modified, only created and deleted.
-func (l *LinkedTransactions) Update(provider *xerogolang.Provider, session goth.Session) (*LinkedTransactions, error) {
+func (l *LinkedTransactions) Update(provider xerogolang.IProvider, session goth.Session) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -124,7 +124,7 @@ func (l *LinkedTransactions) Update(provider *xerogolang.Provider, session goth.
 //FindLinkedTransactionsModifiedSince will get all LinkedTransactions modified after a specified date.
 //additional querystringParameters such as page, SourceTransactionID, ContactID,
 //Status, and TargetTransactionID can be added as a map
-func FindLinkedTransactionsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*LinkedTransactions, error) {
+func FindLinkedTransactionsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -144,12 +144,12 @@ func FindLinkedTransactionsModifiedSince(provider *xerogolang.Provider, session 
 //FindLinkedTransactions will get all LinkedTransactions.
 //additional querystringParameters such as page, SourceTransactionID, ContactID,
 //Status, and TargetTransactionID can be added as a map
-func FindLinkedTransactions(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*LinkedTransactions, error) {
+func FindLinkedTransactions(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*LinkedTransactions, error) {
 	return FindLinkedTransactionsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindLinkedTransaction will get a single LinkedTransaction - LinkedTransactionID must be a GUID for an LinkedTransaction
-func FindLinkedTransaction(provider *xerogolang.Provider, session goth.Session, linkedTransactionID string) (*LinkedTransactions, error) {
+func FindLinkedTransaction(provider xerogolang.IProvider, session goth.Session, linkedTransactionID string) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -163,7 +163,7 @@ func FindLinkedTransaction(provider *xerogolang.Provider, session goth.Session, 
 }
 
 //RemoveLinkedTransaction will get a single LinkedTransaction - LinkedTransactionID must be a GUID for an LinkedTransaction
-func RemoveLinkedTransaction(provider *xerogolang.Provider, session goth.Session, linkedTransactionID string) (*LinkedTransactions, error) {
+func RemoveLinkedTransaction(provider xerogolang.IProvider, session goth.Session, linkedTransactionID string) (*LinkedTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

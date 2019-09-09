@@ -84,7 +84,7 @@ func unmarshalExpenseClaim(expenseClaimResponseBytes []byte) (*ExpenseClaims, er
 }
 
 //Create will create expenseClaims given an ExpenseClaims struct
-func (e *ExpenseClaims) Create(provider *xerogolang.Provider, session goth.Session) (*ExpenseClaims, error) {
+func (e *ExpenseClaims) Create(provider xerogolang.IProvider, session goth.Session) (*ExpenseClaims, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -105,7 +105,7 @@ func (e *ExpenseClaims) Create(provider *xerogolang.Provider, session goth.Sessi
 
 //Update will update an expenseClaim given an ExpenseClaims struct
 //This will only handle single expenseClaim - you cannot update multiple expenseClaims in a single call
-func (e *ExpenseClaims) Update(provider *xerogolang.Provider, session goth.Session) (*ExpenseClaims, error) {
+func (e *ExpenseClaims) Update(provider xerogolang.IProvider, session goth.Session) (*ExpenseClaims, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -134,7 +134,7 @@ func (e *ExpenseClaims) Update(provider *xerogolang.Provider, session goth.Sessi
 //These ExpenseClaims will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 ExpenseClaims at a time
 //additional querystringParameters such as where and order can be added as a map
-func FindExpenseClaimsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*ExpenseClaims, error) {
+func FindExpenseClaimsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*ExpenseClaims, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -154,12 +154,12 @@ func FindExpenseClaimsModifiedSince(provider *xerogolang.Provider, session goth.
 //FindExpenseClaims will get all ExpenseClaims. These ExpenseClaim will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 ExpenseClaims at a time
 //additional querystringParameters such as where and order can be added as a map
-func FindExpenseClaims(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*ExpenseClaims, error) {
+func FindExpenseClaims(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*ExpenseClaims, error) {
 	return FindExpenseClaimsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindExpenseClaim will get a single expenseClaim - expenseClaimID can be a GUID for an expenseClaim or an expenseClaim number
-func FindExpenseClaim(provider *xerogolang.Provider, session goth.Session, expenseClaimID string) (*ExpenseClaims, error) {
+func FindExpenseClaim(provider xerogolang.IProvider, session goth.Session, expenseClaimID string) (*ExpenseClaims, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

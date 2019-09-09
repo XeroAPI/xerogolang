@@ -109,7 +109,7 @@ func unmarshalBankTransaction(bankTransactionResponseBytes []byte) (*BankTransac
 }
 
 //Create will create BankTransactions given an BankTransactions struct
-func (b *BankTransactions) Create(provider *xerogolang.Provider, session goth.Session) (*BankTransactions, error) {
+func (b *BankTransactions) Create(provider xerogolang.IProvider, session goth.Session) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -130,7 +130,7 @@ func (b *BankTransactions) Create(provider *xerogolang.Provider, session goth.Se
 
 //Update will update a BankTransaction given a BankTransactions struct
 //This will only handle single BankTransaction - you cannot update multiple BankTransactions in a single call
-func (b *BankTransactions) Update(provider *xerogolang.Provider, session goth.Session) (*BankTransactions, error) {
+func (b *BankTransactions) Update(provider xerogolang.IProvider, session goth.Session) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -153,7 +153,7 @@ func (b *BankTransactions) Update(provider *xerogolang.Provider, session goth.Se
 //These BankTransactions will not have details like default account codes and tracking categories by default.
 //If you need details then then add a 'page' querystringParameter and get 100 BankTransactions at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindBankTransactionsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransactions, error) {
+func FindBankTransactionsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -173,12 +173,12 @@ func FindBankTransactionsModifiedSince(provider *xerogolang.Provider, session go
 //FindBankTransactions will get all BankTransactions. These BankTransaction will not have details like line items by default.
 //If you need details then then add a 'page' querystringParameter and get 100 BankTransactions at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindBankTransactions(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransactions, error) {
+func FindBankTransactions(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*BankTransactions, error) {
 	return FindBankTransactionsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindBankTransaction will get a single BankTransaction - BankTransactionID can be a GUID for an BankTransaction or an BankTransaction number
-func FindBankTransaction(provider *xerogolang.Provider, session goth.Session, bankTransactionID string) (*BankTransactions, error) {
+func FindBankTransaction(provider xerogolang.IProvider, session goth.Session, bankTransactionID string) (*BankTransactions, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

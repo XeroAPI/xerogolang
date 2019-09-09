@@ -83,7 +83,7 @@ func unmarshalManualJournal(manualJournalResponseBytes []byte) (*ManualJournals,
 }
 
 //Create will create manualJournals given an ManualJournals struct
-func (m *ManualJournals) Create(provider *xerogolang.Provider, session goth.Session) (*ManualJournals, error) {
+func (m *ManualJournals) Create(provider xerogolang.IProvider, session goth.Session) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -104,7 +104,7 @@ func (m *ManualJournals) Create(provider *xerogolang.Provider, session goth.Sess
 
 //Update will update an manualJournal given an ManualJournals struct
 //This will only handle single manualJournal - you cannot update multiple manualJournals in a single call
-func (m *ManualJournals) Update(provider *xerogolang.Provider, session goth.Session) (*ManualJournals, error) {
+func (m *ManualJournals) Update(provider xerogolang.IProvider, session goth.Session) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -127,7 +127,7 @@ func (m *ManualJournals) Update(provider *xerogolang.Provider, session goth.Sess
 //These ManualJournals will not have details like line items by default
 //If you need details then then add a 'page' querystringParameter and get 100 ManualJournals at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindManualJournalsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*ManualJournals, error) {
+func FindManualJournalsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -147,12 +147,12 @@ func FindManualJournalsModifiedSince(provider *xerogolang.Provider, session goth
 //FindManualJournals will get all ManualJournals. These ManualJournal will not have details like line items.
 //If you need details then then add a 'page' querystringParameter and get 100 ManualJournals at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindManualJournals(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*ManualJournals, error) {
+func FindManualJournals(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*ManualJournals, error) {
 	return FindManualJournalsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindManualJournal will get a single manualJournal - manualJournalID can be a GUID for an manualJournal or an manualJournal number
-func FindManualJournal(provider *xerogolang.Provider, session goth.Session, manualJournalID string) (*ManualJournals, error) {
+func FindManualJournal(provider xerogolang.IProvider, session goth.Session, manualJournalID string) (*ManualJournals, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

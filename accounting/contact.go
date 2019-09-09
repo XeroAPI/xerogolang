@@ -162,7 +162,7 @@ func unmarshalContact(contactResponseBytes []byte) (*Contacts, error) {
 }
 
 //Create will create Contacts given an Contacts struct
-func (c *Contacts) Create(provider *xerogolang.Provider, session goth.Session) (*Contacts, error) {
+func (c *Contacts) Create(provider xerogolang.IProvider, session goth.Session) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -183,7 +183,7 @@ func (c *Contacts) Create(provider *xerogolang.Provider, session goth.Session) (
 
 //Update will update a Contact given a Contacts struct
 //This will only handle single Contact - you cannot update multiple Contacts in a single call
-func (c *Contacts) Update(provider *xerogolang.Provider, session goth.Session) (*Contacts, error) {
+func (c *Contacts) Update(provider xerogolang.IProvider, session goth.Session) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -206,7 +206,7 @@ func (c *Contacts) Update(provider *xerogolang.Provider, session goth.Session) (
 //These Contacts will not have details like default account codes and tracking categories.
 //If you need details then then add a 'page' querystringParameter and get 100 Contacts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindContactsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Contacts, error) {
+func FindContactsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -226,12 +226,12 @@ func FindContactsModifiedSince(provider *xerogolang.Provider, session goth.Sessi
 //FindContacts will get all Contacts. These Contact will not have details like default accounts.
 //If you need details then then add a 'page' querystringParameter and get 100 Contacts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindContacts(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Contacts, error) {
+func FindContacts(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Contacts, error) {
 	return FindContactsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindContact will get a single Contact - ContactID can be a GUID for an Contact or an Contact number
-func FindContact(provider *xerogolang.Provider, session goth.Session, contactID string) (*Contacts, error) {
+func FindContact(provider xerogolang.IProvider, session goth.Session, contactID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -245,7 +245,7 @@ func FindContact(provider *xerogolang.Provider, session goth.Session, contactID 
 }
 
 //AddToContactGroup will add a collection of Contacts to a supplied contactGroupID
-func (c *Contacts) AddToContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
+func (c *Contacts) AddToContactGroup(provider xerogolang.IProvider, session goth.Session, contactGroupID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -274,7 +274,7 @@ func (c *Contacts) AddToContactGroup(provider *xerogolang.Provider, session goth
 }
 
 //RemoveFromContactGroup will remove a Contact from a supplied contactGroupID - must be done one at a time.
-func (c *Contacts) RemoveFromContactGroup(provider *xerogolang.Provider, session goth.Session, contactGroupID string) (*Contacts, error) {
+func (c *Contacts) RemoveFromContactGroup(provider xerogolang.IProvider, session goth.Session, contactGroupID string) (*Contacts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

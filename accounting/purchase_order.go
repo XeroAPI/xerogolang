@@ -121,7 +121,7 @@ func unmarshalPurchaseOrder(purchaseOrderResponseBytes []byte) (*PurchaseOrders,
 }
 
 //Create will create purchaseOrders given an PurchaseOrders struct
-func (p *PurchaseOrders) Create(provider *xerogolang.Provider, session goth.Session) (*PurchaseOrders, error) {
+func (p *PurchaseOrders) Create(provider xerogolang.IProvider, session goth.Session) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -142,7 +142,7 @@ func (p *PurchaseOrders) Create(provider *xerogolang.Provider, session goth.Sess
 
 //Update will update an purchaseOrder given an PurchaseOrders struct
 //This will only handle single purchaseOrder - you cannot update multiple purchaseOrders in a single call
-func (p *PurchaseOrders) Update(provider *xerogolang.Provider, session goth.Session) (*PurchaseOrders, error) {
+func (p *PurchaseOrders) Update(provider xerogolang.IProvider, session goth.Session) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -164,7 +164,7 @@ func (p *PurchaseOrders) Update(provider *xerogolang.Provider, session goth.Sess
 //FindPurchaseOrdersModifiedSince will get all PurchaseOrders modified after a specified date.
 //Paging is enforced by default. 100 purchase orders are returned per page.
 //additional querystringParameters such as page, order, status, DateFrom & DateTo can be added as a map
-func FindPurchaseOrdersModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*PurchaseOrders, error) {
+func FindPurchaseOrdersModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -183,12 +183,12 @@ func FindPurchaseOrdersModifiedSince(provider *xerogolang.Provider, session goth
 
 //FindPurchaseOrders will get all PurchaseOrders. Paging is enforced by default. 100 purchase orders are returned per page.
 //additional querystringParameters such as page, order, status, DateFrom & DateTo can be added as a map
-func FindPurchaseOrders(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*PurchaseOrders, error) {
+func FindPurchaseOrders(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*PurchaseOrders, error) {
 	return FindPurchaseOrdersModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindPurchaseOrder will get a single purchaseOrder - purchaseOrderID can be a GUID for an purchaseOrder or an purchaseOrder number
-func FindPurchaseOrder(provider *xerogolang.Provider, session goth.Session, purchaseOrderID string) (*PurchaseOrders, error) {
+func FindPurchaseOrder(provider xerogolang.IProvider, session goth.Session, purchaseOrderID string) (*PurchaseOrders, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

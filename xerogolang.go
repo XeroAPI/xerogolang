@@ -37,6 +37,13 @@ var (
 	privateKeyFilePath = os.Getenv("XERO_PRIVATE_KEY_PATH")
 )
 
+type IProvider interface {
+	Find(goth.Session, string, map[string]string, map[string]string) ([]byte, error)
+	Create(goth.Session, string, map[string]string, []byte) ([]byte, error)
+	Update(goth.Session, string, map[string]string, []byte) ([]byte, error)
+	Remove(goth.Session, string, map[string]string) ([]byte, error)
+}
+
 // Provider is the implementation of `goth.Provider` for accessing Xero.
 type Provider struct {
 	ClientKey       string

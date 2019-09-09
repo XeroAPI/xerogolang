@@ -83,7 +83,7 @@ func unmarshalBankTransfer(bankTransferResponseBytes []byte) (*BankTransfers, er
 }
 
 //Create will create bankTransfers given a BankTransfers struct
-func (b *BankTransfers) Create(provider *xerogolang.Provider, session goth.Session) (*BankTransfers, error) {
+func (b *BankTransfers) Create(provider xerogolang.IProvider, session goth.Session) (*BankTransfers, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -106,7 +106,7 @@ func (b *BankTransfers) Create(provider *xerogolang.Provider, session goth.Sessi
 //These BankTransfers will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 BankTransfers at a time
 //additional querystringParameters such as where and order can be added as a map
-func FindBankTransfersModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransfers, error) {
+func FindBankTransfersModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*BankTransfers, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -126,12 +126,12 @@ func FindBankTransfersModifiedSince(provider *xerogolang.Provider, session goth.
 //FindBankTransfers will get all BankTransfers. These BankTransfer will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 BankTransfers at a time
 //additional querystringParameters such as where and order can be added as a map
-func FindBankTransfers(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*BankTransfers, error) {
+func FindBankTransfers(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*BankTransfers, error) {
 	return FindBankTransfersModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindBankTransfer will get a single bankTransfer - bankTransferID can be a GUID for an bankTransfer or an bankTransfer number
-func FindBankTransfer(provider *xerogolang.Provider, session goth.Session, bankTransferID string) (*BankTransfers, error) {
+func FindBankTransfer(provider xerogolang.IProvider, session goth.Session, bankTransferID string) (*BankTransfers, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

@@ -33,7 +33,7 @@ func unmarshalCurrencies(currencyResponseBytes []byte) (*Currencies, error) {
 }
 
 //FindCurrencies will get all currencies
-func FindCurrencies(provider *xerogolang.Provider, session goth.Session) (*Currencies, error) {
+func FindCurrencies(provider xerogolang.IProvider, session goth.Session) (*Currencies, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}

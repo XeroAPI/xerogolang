@@ -97,7 +97,7 @@ func unmarshalReceipt(receiptResponseBytes []byte) (*Receipts, error) {
 }
 
 //Create will create receipts given an Receipts struct
-func (r *Receipts) Create(provider *xerogolang.Provider, session goth.Session) (*Receipts, error) {
+func (r *Receipts) Create(provider xerogolang.IProvider, session goth.Session) (*Receipts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -118,7 +118,7 @@ func (r *Receipts) Create(provider *xerogolang.Provider, session goth.Session) (
 
 //Update will update an receipt given an Receipts struct
 //This will only handle single receipt - you cannot update multiple receipts in a single call
-func (r *Receipts) Update(provider *xerogolang.Provider, session goth.Session) (*Receipts, error) {
+func (r *Receipts) Update(provider xerogolang.IProvider, session goth.Session) (*Receipts, error) {
 	additionalHeaders := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/xml",
@@ -152,7 +152,7 @@ func (r *Receipts) Update(provider *xerogolang.Provider, session goth.Session) (
 //These Receipts will not have details like default line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Receipts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindReceiptsModifiedSince(provider *xerogolang.Provider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Receipts, error) {
+func FindReceiptsModifiedSince(provider xerogolang.IProvider, session goth.Session, modifiedSince time.Time, querystringParameters map[string]string) (*Receipts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
@@ -172,12 +172,12 @@ func FindReceiptsModifiedSince(provider *xerogolang.Provider, session goth.Sessi
 //FindReceipts will get all Receipts. These Receipt will not have details like line items by default.
 //If you need details then add a 'page' querystringParameter and get 100 Receipts at a time
 //additional querystringParameters such as where, page, order can be added as a map
-func FindReceipts(provider *xerogolang.Provider, session goth.Session, querystringParameters map[string]string) (*Receipts, error) {
+func FindReceipts(provider xerogolang.IProvider, session goth.Session, querystringParameters map[string]string) (*Receipts, error) {
 	return FindReceiptsModifiedSince(provider, session, dayZero, querystringParameters)
 }
 
 //FindReceipt will get a single receipt - receiptID can be a GUID for an receipt or an receipt number
-func FindReceipt(provider *xerogolang.Provider, session goth.Session, receiptID string) (*Receipts, error) {
+func FindReceipt(provider xerogolang.IProvider, session goth.Session, receiptID string) (*Receipts, error) {
 	additionalHeaders := map[string]string{
 		"Accept": "application/json",
 	}
