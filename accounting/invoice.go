@@ -58,7 +58,7 @@ type Invoice struct {
 	ExpectedPaymentDate string `json:"ExpectedPaymentDate,omitempty" xml:"ExpectedPaymentDate,omitempty"`
 
 	// Shown on bills (Accounts Payable) when this has been set
-	PlannedPaymentDate string `json:"PlannedPaymentDate,omitempty" xml:"PlannedPaymentDate,omitempty"`
+	PlannedPaymentDate string `json:"PlannedPaymentDateString,omitempty" xml:"PlannedPaymentDate,omitempty"`
 
 	// Total of invoice excluding taxes
 	SubTotal float64 `json:"SubTotal,omitempty" xml:"SubTotal,omitempty"`
