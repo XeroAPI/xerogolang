@@ -1,5 +1,12 @@
 # xerogolang (alpha)
 
+## Looking for OAuth 2.0?
+Coming soon xero-golang SDK for OAuth 2.0 and it's companion sample app
+
+## What about updating xerogolang to OAuth 2.0?
+We are devoting resources towards building and improving our new OAuth 2.0 SDKs which don't share a code base with this library. For those using xerogolang, you have the option of forking this repository and modifying it for future use.
+
+
 [![GoDoc](https://godoc.org/github.com/XeroAPI/xerogolang?status.png)](https://godoc.org/github.com/XeroAPI/xerogolang)
 
 This is the Xero Golang SDK for the [Xero API](https://developer.xero.com/).
