@@ -1,7 +1,15 @@
 # xerogolang (alpha)
 
 ## Looking for OAuth 2.0?
-Coming soon xero-golang SDK for OAuth 2.0 and it's companion sample app
+This repository xerogolang was hand written for use with OAuth1.0a. For OAuth 2, we've moved to building next generation SDKs in an automated fashion using OpenAPI specifications. 
+
+OAuth 1.0a was officially deprecated on March 31, 2021. We've made the decision to archive xerogolang and not update to OAuth 2 as this is not inline with our strategy to automate the creation of them from OpenAPI specs.
+
+Our official Golang OAuth2 SDK is development is on hold until we secure resources to get the code to MVP status.
+
+In the meantime, we do have a golang example project that can help you authenticate and roll your own API calls without a full blown SDK.
+
+https://github.com/XeroAPI/golang-oauth2-example
 
 ## What about updating xerogolang to OAuth 2.0?
 We are devoting resources towards building and improving our new OAuth 2.0 SDKs which don't share a code base with this library. For those using xerogolang, you have the option of forking this repository and modifying it for future use.
