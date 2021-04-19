@@ -1,4 +1,4 @@
-# xerogolang (alpha)
+# xerogolang (deprecated as of April 2021)
 
 ## Looking for OAuth 2.0?
 This repository xerogolang was hand written for use with OAuth1.0a. For OAuth 2, we've moved to building next generation SDKs in an automated fashion using OpenAPI specifications. 
